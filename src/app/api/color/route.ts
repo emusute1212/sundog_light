@@ -7,8 +7,7 @@ export type ReturnDataType = {
     selectedColor: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function POST(req: Request, res: Response) {
+export async function POST(req: Request) {
     const { selectedColor } = await req.json()
     try {
         await pusherServer.trigger("selected-color-channel", "evt::color", {
