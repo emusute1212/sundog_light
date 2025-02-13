@@ -1,7 +1,7 @@
 "use client";
 import {ChangeEvent} from "react";
 
-export default function Host() {
+export default function EventDetailPage() {
     const handleSelectColor = async (e: ChangeEvent<HTMLInputElement>) => {
         const body = { selectedColor: e.target.value };
         const data = await fetch("/api/color", {
