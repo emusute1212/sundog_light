@@ -8,4 +8,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             clientSecret: process.env.AUTH_WEBAPP_GOOGLE_CLIENT_SECRET,
         }),
     ],
+    callbacks: {
+        authorized: async ({ auth }) => {
+            return !!auth
+        },
+    },
+    pages: {
+        signIn: "/login",
+    },
 })
