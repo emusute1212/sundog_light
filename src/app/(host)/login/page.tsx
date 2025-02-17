@@ -1,13 +1,25 @@
-import {SignIn, SignInType} from "@/components/auth/signin-button";
-import {useSearchParams} from "next/navigation";
+import {providerMap, signIn} from "@/auth";
 
-export default function HostTopPage() {
-    const searchParams = useSearchParams();
-    const redirectUri = searchParams.get("redirectUri") ?? "/event/list"
+export default function HostLoginPage(props: {
+    searchParams: Promise<{ callbackUrl: string | undefined }>
+}) {
     return (
-        <SignIn
-            redirectUri={redirectUri}
-            type={SignInType.Google}
-        />
+        <div className="flex flex-col gap-2">
+            {Object.values(providerMap).map((provider) => (
+                <form
+                    key={provider.id}
+                    action={async () => {
+                        "use server"
+                        await signIn(provider.id, {
+                            redirectTo: (await props.searchParams)?.callbackUrl ?? "/event/detail",
+                        })
+                    }}
+                >
+                    <button type="submit">
+                        <span>Sign in with {provider.name}</span>
+                    </button>
+                </form>
+            ))}
+        </div>
     );
 }
