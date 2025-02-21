@@ -10,6 +10,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth/upstash-redis-adapter": "^2.7.4",
+    "@upstash/redis": "^1.34.4",
+    "lucide-react": "^0.475.0",
     "next": "15.1.6",
     "next-auth": "5.0.0-beta.25",
     "pusher": "^5.2.0",

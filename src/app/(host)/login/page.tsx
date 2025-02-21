@@ -11,7 +11,7 @@ export default function HostLoginPage(props: {
                     action={async () => {
                         "use server"
                         await signIn(provider.id, {
-                            redirectTo: (await props.searchParams)?.callbackUrl ?? "/event/detail",
+                            redirectTo: (await props.searchParams)?.callbackUrl ?? "/event/list",
                         })
                     }}
                 >
