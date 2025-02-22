@@ -1,20 +1,20 @@
 import {EventDetail} from "@/features/event/types/event-detail";
-import EventItem from "@/features/event/components/list/event-item";
-import EventAdd from "@/features/event/components/list/event-add";
+import EventItemComponent from "@/features/event/components/list/event-item-component";
+import EventAddComponent from "@/features/event/components/list/event-add-component";
 
-export default function EventList(props: { events: EventDetail[] }) {
+export default function EventListSection(props: { events: EventDetail[] }) {
     return (
         <div className={`grid grid-rows-none`}>
             {props.events.map((event: EventDetail) => {
                     return (
-                        <EventItem
+                        <EventItemComponent
                             key={event.id}
                             event={event}
                         />
                     )
                 }
             )}
-            <EventAdd />
+            <EventAddComponent />
         </div>
     );
 }
