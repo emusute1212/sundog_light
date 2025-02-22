@@ -1,5 +1,6 @@
 import {EventDetail} from "@/features/event/types/event-detail";
-import EventItem from "@/features/event/components/event-item";
+import EventItem from "@/features/event/components/list/event-item";
+import EventAdd from "@/features/event/components/list/event-add";
 
 export default function EventList(props: { events: EventDetail[] }) {
     return (
@@ -13,6 +14,7 @@ export default function EventList(props: { events: EventDetail[] }) {
                     )
                 }
             )}
+            <EventAdd />
         </div>
     );
 }
