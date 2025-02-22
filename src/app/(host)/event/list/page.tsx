@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from "react";
 import {EventDetail} from "@/features/event/types/event-detail";
-import EventList from "@/features/event/components/list/event-list";
+import EventListSection from "@/features/event/components/list/event-list-section";
 
 export default function EventListPage() {
     const [eventList, setEventList] = useState<EventDetail[]>([])
@@ -20,7 +20,7 @@ export default function EventListPage() {
         callApi().then()
     }, []);
     return (
-        <EventList
+        <EventListSection
             events={eventList}
         />
     );
