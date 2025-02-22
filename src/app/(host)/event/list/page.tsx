@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from "react";
 import {EventDetail} from "@/features/event/types/event-detail";
-import EventList from "@/features/event/components/event-list";
+import EventList from "@/features/event/components/list/event-list";
 
 export default function EventListPage() {
     const [eventList, setEventList] = useState<EventDetail[]>([])
