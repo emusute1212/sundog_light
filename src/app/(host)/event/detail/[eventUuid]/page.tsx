@@ -3,6 +3,7 @@ import EventDetailSection from "@/features/event/components/detail/event-detail-
 import {useParams} from "next/navigation";
 import {useEffect, useState} from "react";
 import {EventDetail} from "@/features/event/types/event-detail";
+import {EventSendableColor} from "@/features/event/types/event-sendable-color";
 
 export default function EventDetailPage() {
     const params = useParams()
@@ -22,16 +23,17 @@ export default function EventDetailPage() {
         callApi().then()
     }, [eventUuid]);
     const onClickColor = async (color: string) => {
-        const body = { selectedColor: color };
-        const data = await fetch("/api/color", {
+        const eventSendableColor: EventSendableColor = {
+            uuid: eventUuid,
+            color: color,
+        };
+        await fetch("/api/color", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify(eventSendableColor),
         });
-        const json = await data.json();
-        console.log("handle_test_click_response", json);
     };
 
     if (eventDetail === undefined) {
