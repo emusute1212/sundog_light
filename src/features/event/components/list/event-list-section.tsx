@@ -8,7 +8,7 @@ export default function EventListSection(props: { events: EventDetail[] }) {
             {props.events.map((event: EventDetail) => {
                     return (
                         <EventItemComponent
-                            key={event.id}
+                            key={event.uuid}
                             event={event}
                         />
                     )
