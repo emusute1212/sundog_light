@@ -5,8 +5,6 @@ const redis = Redis.fromEnv();
 
 export async function POST(req: Request)  {
     const { key } = (await req.json());
-    const result = await Promise.all([...new Array(await redis.llen(key)).keys()].map(async (it) => {
-        return await redis.lindex(key, it) as EventDetail
-    }));
+    const result: EventDetail[] = await redis.lrange(key, 0, -1);
     return Response.json(JSON.stringify({ result }), { status: 200 });
 }
