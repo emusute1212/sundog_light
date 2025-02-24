@@ -8,9 +8,8 @@ export async function POST(
     {params}: { params: { eventUuid: string } },
 ) {
     const {key} = (await req.json());
-    const result = (await Promise.all([...new Array(await redis.llen(key)).keys()].map(async (it) => {
-        return await redis.lindex(key, it) as EventDetail
-    }))).find((it) => {
+    const eventDetails: EventDetail[] = await redis.lrange(key, 0, -1)
+    const result = eventDetails.find((it) => {
         return it.uuid == params.eventUuid
     })
     return Response.json(JSON.stringify({result}), {status: 200});
