@@ -9,9 +9,9 @@ export default function EventDetailSection(props: {
         <div>
             <span>{props.event.name}</span>
             <EventColorListComponent
-              colors={props.event.colors}
-              onClickColor={props.onClickColor}/>
-            <span>{window.location.origin}/{props.event.uuid}</span>
+                colors={props.event.colors}
+                onClickColor={props.onClickColor}/>
+            <span>{window.location.origin}/client/{props.event.uuid}</span>
         </div>
     );
 }
