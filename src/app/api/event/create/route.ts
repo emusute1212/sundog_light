@@ -1,7 +1,7 @@
 import {Redis} from "@upstash/redis"
-import {EventCreateRequest} from "@/features/event/types/event-create-request";
 import {EventDetail} from "@/features/event/types/event-detail";
 import {randomUUID} from "crypto";
+import {EventCreateRequest} from "@/features/event/types/event-create-request";
 
 const redis = Redis.fromEnv();
 

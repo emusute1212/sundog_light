@@ -1,4 +1,4 @@
-import EventColorSelectComponent from "@/features/event/components/detail/event-color-select-component";
+import SelectableColor from "@/features/event/components/core/selectable-color";
 
 export default function EventColorListComponent(props: {
     colors: string[],
@@ -8,7 +8,7 @@ export default function EventColorListComponent(props: {
         <div className={`grid grid-cols-4 gap-4`}>
             {props.colors.map((color: string, i: number) => {
                     return (
-                        <EventColorSelectComponent
+                        <SelectableColor
                             key={i}
                             color={color}
                             onClickColor={props.onClickColor}

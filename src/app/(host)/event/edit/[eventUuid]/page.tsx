@@ -1,15 +1,15 @@
 "use client";
-import EventDetailSection from "@/features/event/components/detail/event-detail-section";
 import {useParams} from "next/navigation";
 import {useEffect, useState} from "react";
 import {EventDetail} from "@/features/event/types/event-detail";
-import {EventSendableColor} from "@/features/event/types/event-sendable-color";
+import EventCreateSection from "@/features/event/components/create/event-create-section";
 
-export default function EventDetailPage() {
+export default function EventEditPage() {
     const params = useParams()
     const eventUuid = params.eventUuid as string;
     const [eventDetail, setEventDetail] = useState<EventDetail>()
     useEffect(() => {
+        if (eventUuid === undefined) return
         const callApi = async () => {
             const response = await fetch(`/api/event/${eventUuid}`, {
                 method: "POST",
@@ -22,19 +22,6 @@ export default function EventDetailPage() {
         }
         callApi().then()
     }, [eventUuid]);
-    const onClickColor = async (color: string) => {
-        const eventSendableColor: EventSendableColor = {
-            uuid: eventUuid,
-            color: color,
-        };
-        await fetch("/api/color", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(eventSendableColor),
-        });
-    };
 
     if (eventDetail === undefined) {
         return (
@@ -42,9 +29,9 @@ export default function EventDetailPage() {
         )
     }
     return (
-        <EventDetailSection
-            event={eventDetail}
-            onClickColor={onClickColor}
+        // todo
+        <EventCreateSection
+            userId={"aiueo"}
         />
     );
 }
