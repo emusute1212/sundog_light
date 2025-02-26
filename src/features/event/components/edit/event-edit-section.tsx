@@ -1,39 +1,42 @@
 import EditColorList from "@/features/event/components/core/edit-color-list";
 import {useState} from "react";
-import {EventCreateRequest} from "@/features/event/types/event-create-request";
-import {useRouter} from "next/navigation";
 import {ColorPickerDialog} from "@/features/event/components/core/color-picker-dialog";
+import EventEditSubmitButton from "@/features/event/components/edit/event-edit-submit-button";
+import {EventDetail} from "@/features/event/types/event-detail";
+import {EventCreateRequest} from "@/features/event/types/event-create-request";
+import {EventUpdateRequest} from "@/features/event/types/event-update-request";
 
-export default function EventCreateSection(props: { userId: string }) {
-    const router = useRouter();
-    const [name, setName] = useState("");
-    const [colors, setColors] = useState<string[]>([]);
+export default function EventEditSection({userId, eventDetail = undefined}: {
+    userId: string,
+    eventDetail?: EventDetail,
+}) {
+    const [name, setName] = useState(eventDetail?.name ?? "");
+    const [colors, setColors] = useState<string[]>(eventDetail?.colors ?? []);
     const [selectedIndex, setSelectedIndex] = useState<number>(-1);
     const [isOpenColorPicker, setIsOpenColorPicker] = useState(false);
-    const handleSubmit = async () => {
-        const eventCreateRequest: EventCreateRequest = {
-            userId: props.userId,
-            event: {
-                name: name,
-                colors: colors,
-            },
+    const request: EventCreateRequest | EventUpdateRequest = (eventDetail === undefined) ? {
+        type: "create-request",
+        userId: userId,
+        event: {
+            name: name,
+            colors: colors,
+        },
+    } : {
+        type: "update-request",
+        userId: userId,
+        eventDetail: {
+            uuid: eventDetail.uuid,
+            name: name,
+            colors: colors,
         }
-        await fetch("/api/event/create", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(eventCreateRequest),
-        });
-        router.push("/event/list");
-    };
+    }
     return (
-        <form onSubmit={handleSubmit}>
+        <div>
             <div className={`flex flex-col space-y-2`}>
                 <label>イベント名</label>
-                <input
+                <textarea
                     className={`border border-black`}
-                    type={`text`}
+                    value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
             </div>
@@ -64,11 +67,8 @@ export default function EventCreateSection(props: { userId: string }) {
                     onCloseRequest={() => setIsOpenColorPicker(false)}
                 />
             </div>
-            <button
-                className={`mt-2 bg-black text-white px-4 py-2 rounded-lg`}
-                type={`submit`}
-            >イベントを保存する
-            </button>
-        </form>
+            <EventEditSubmitButton
+                request={request}/>
+        </div>
     );
 }

@@ -8,16 +8,12 @@ export async function POST(
     req: Request,
 ) {
     const request: EventUpdateRequest = await req.json();
-    const list = await redis.json.get(request.userId);
-
-    if (!Array.isArray(list)) return false;
-
-    const updatedList: EventDetail[] = list.map(it => {
-            const eventDetail = it as EventDetail
-            return eventDetail.uuid === request.event.uuid ? request.event : eventDetail
-        }
-    );
-
-    await redis.json.set(request.userId, "$", updatedList);
-    return Response.json(request.event, {status: 200});
+    const key = request.userId
+    const events: EventDetail[] = await redis.lrange(key, 0, -1)
+    const targetIndex = events
+        .findIndex((it) => {
+            return it.uuid == request.eventDetail.uuid
+        })
+    await redis.lset(key, targetIndex, JSON.stringify(request.eventDetail))
+    return Response.json(request.eventDetail, {status: 200});
 }

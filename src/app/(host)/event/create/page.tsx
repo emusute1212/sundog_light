@@ -1,9 +1,9 @@
 "use client"
-import EventCreateSection from "@/features/event/components/create/event-create-section";
+import EventEditSection from "@/features/event/components/edit/event-edit-section";
 
 export default function EventCreatePage() {
     return (
-        <EventCreateSection
+        <EventEditSection
             userId={"aiueo"}
         />
     );
