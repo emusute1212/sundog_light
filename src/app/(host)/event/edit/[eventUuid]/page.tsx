@@ -2,7 +2,7 @@
 import {useParams} from "next/navigation";
 import {useEffect, useState} from "react";
 import {EventDetail} from "@/features/event/types/event-detail";
-import EventCreateSection from "@/features/event/components/create/event-create-section";
+import EventEditSection from "@/features/event/components/edit/event-edit-section";
 
 export default function EventEditPage() {
     const params = useParams()
@@ -29,9 +29,9 @@ export default function EventEditPage() {
         )
     }
     return (
-        // todo
-        <EventCreateSection
+        <EventEditSection
             userId={"aiueo"}
+            eventDetail={eventDetail}
         />
     );
 }
