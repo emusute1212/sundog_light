@@ -1,10 +1,19 @@
-"use client"
-import EventEditSection from "@/features/event/components/edit/event-edit-section";
+import {auth} from "@/auth";
+import EventCreatePage from "@/features/event/components/create/event-create-page";
+import crypto from 'crypto-js';
 
-export default function EventCreatePage() {
+export default async function EventCreatePageHost() {
+    const session = await auth()
+    const email = session?.user?.email
+    if (email == null) {
+        return (
+            <div/>
+        )
+    }
+    const userId = crypto.HmacSHA256(email, process.env.HASH_KEY!).toString()
     return (
-        <EventEditSection
-            userId={"aiueo"}
+        <EventCreatePage
+            userId={userId}
         />
     );
 }

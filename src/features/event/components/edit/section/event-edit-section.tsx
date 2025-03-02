@@ -1,7 +1,8 @@
+"use client"
 import EditColorList from "@/features/event/components/core/edit-color-list";
 import {useState} from "react";
 import {ColorPickerDialog} from "@/features/event/components/core/color-picker-dialog";
-import EventEditSubmitButton from "@/features/event/components/edit/event-edit-submit-button";
+import EventEditSubmitButton from "@/features/event/components/edit/section/component/event-edit-submit-button";
 import {EventDetail} from "@/features/event/types/event-detail";
 import {EventCreateRequest} from "@/features/event/types/event-create-request";
 import {EventUpdateRequest} from "@/features/event/types/event-update-request";

@@ -1,6 +1,6 @@
 import {providerMap, signIn} from "@/auth";
 
-export default function HostLoginPage(props: {
+export default function HostLoginPage({searchParams}: {
     searchParams: Promise<{ callbackUrl: string | undefined }>
 }) {
     return (
@@ -11,7 +11,7 @@ export default function HostLoginPage(props: {
                     action={async () => {
                         "use server"
                         await signIn(provider.id, {
-                            redirectTo: (await props.searchParams)?.callbackUrl ?? "/event/list",
+                            redirectTo: (await searchParams)?.callbackUrl ?? "/event/list",
                         })
                     }}
                 >

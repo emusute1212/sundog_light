@@ -1,27 +1,19 @@
-"use client";
+import {auth} from "@/auth";
+import EventListPage from "@/features/event/components/list/event-list-page";
+import crypto from "crypto-js";
 
-import {useEffect, useState} from "react";
-import {EventDetail} from "@/features/event/types/event-detail";
-import EventListSection from "@/features/event/components/list/event-list-section";
-
-export default function EventListPage() {
-    const [eventList, setEventList] = useState<EventDetail[]>([])
-    useEffect(() => {
-        const callApi = async () => {
-            const response = await fetch("/api/event/list", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ key: "aiueo" }),
-            });
-            setEventList(JSON.parse(await response.json()).result as EventDetail[])
-        }
-        callApi().then()
-    }, []);
+export default async function EventListPageHost() {
+    const session = await auth()
+    const email = session?.user?.email
+    if (email == null) {
+        return (
+            <div/>
+        )
+    }
+    const userId = crypto.HmacSHA256(email, process.env.HASH_KEY!).toString()
     return (
-        <EventListSection
-            events={eventList}
+        <EventListPage
+            userId={userId}
         />
     );
 }
