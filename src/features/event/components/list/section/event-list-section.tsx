@@ -1,11 +1,11 @@
 import {EventDetail} from "@/features/event/types/event-detail";
-import EventItemComponent from "@/features/event/components/list/event-item-component";
-import EventAddComponent from "@/features/event/components/list/event-add-component";
+import EventItemComponent from "@/features/event/components/list/section/component/event-item-component";
+import EventAddComponent from "@/features/event/components/list/section/component/event-add-component";
 
-export default function EventListSection(props: { events: EventDetail[] }) {
+export default function EventListSection({events}: { events: EventDetail[] }) {
     return (
         <div className={`grid grid-rows-none`}>
-            {props.events.map((event: EventDetail) => {
+            {events.map((event: EventDetail) => {
                     return (
                         <EventItemComponent
                             key={event.uuid}
@@ -14,7 +14,7 @@ export default function EventListSection(props: { events: EventDetail[] }) {
                     )
                 }
             )}
-            <EventAddComponent />
+            <EventAddComponent/>
         </div>
     );
 }

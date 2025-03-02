@@ -1,4 +1,4 @@
-export default function SelectableColor(props: {
+export default function SelectableColor({color, onClickColor}: {
     color: string,
     onClickColor: (color: string) => void,
 }) {
@@ -6,12 +6,12 @@ export default function SelectableColor(props: {
         <div
             className={`p-4 rounded-lg shadow-md aspect-square`}
             onClick={() => {
-                props.onClickColor(props.color);
+                onClickColor(color);
             }}
         >
             <div
                 className={`rounded-lg w-full h-full`}
-                style={{backgroundColor: `${props.color}`}}
+                style={{backgroundColor: `${color}`}}
             />
         </div>
     );

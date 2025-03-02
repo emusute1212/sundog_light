@@ -2,11 +2,11 @@ import {EventCreateRequest} from "@/features/event/types/event-create-request";
 import {EventUpdateRequest} from "@/features/event/types/event-update-request";
 import {useRouter} from "next/navigation";
 
-export default function EventEditSubmitButton(props: {
+export default function EventEditSubmitButton({request}: {
     request: EventCreateRequest | EventUpdateRequest,
 }) {
     const router = useRouter();
-    const isEdit: boolean = (props.request.type == "update-request");
+    const isEdit: boolean = (request.type == "update-request");
     const onClickSubmitButton = async () => {
         const path = isEdit ? "/api/event/update" : "/api/event/create"
         await fetch(path, {
@@ -14,19 +14,19 @@ export default function EventEditSubmitButton(props: {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(props.request),
+            body: JSON.stringify(request),
         });
         // router.push(`/event/detail/${JSON.parse(await response.json()).uuid}`);
         router.push(`/event/list`);
     };
     const onClickDeleteButton = async () => {
         if (isEdit) {
-            await fetch(`/api/event/remove/${(props.request as EventUpdateRequest).eventDetail.uuid}`, {
+            await fetch(`/api/event/remove/${(request as EventUpdateRequest).eventDetail.uuid}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({key: props.request.userId}),
+                body: JSON.stringify({key: request.userId}),
             });
             router.push(`/event/list`);
         }
