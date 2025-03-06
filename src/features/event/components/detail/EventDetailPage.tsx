@@ -3,7 +3,7 @@ import {useParams} from "next/navigation";
 import {useEffect, useState} from "react";
 import {EventDetail} from "@/features/event/types/event-detail";
 import {EventSendableColor} from "@/features/event/types/event-sendable-color";
-import EventDetailSection from "@/features/event/components/detail/section/event-detail-section";
+import EventDetailSection from "@/features/event/components/detail/section/EventDetailSection";
 
 export default function EventDetailPage({userId}: { userId: string }) {
     const params = useParams()

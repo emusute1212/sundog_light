@@ -1,5 +1,5 @@
 import {EventDetail} from "@/features/event/types/event-detail";
-import EventColorListComponent from "@/features/event/components/detail/section/component/event-color-list-component";
+import EventColorListComponent from "@/features/event/components/detail/section/component/EventColorListComponent";
 import {useRouter} from "next/navigation";
 
 export default function EventDetailSection({event, onClickColor}: {

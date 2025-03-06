@@ -1,4 +1,4 @@
-import SelectableColor from "@/features/event/components/core/selectable-color";
+import SelectableColor from "@/features/event/components/core/SelectableColor";
 
 export default function EventColorListComponent({colors, onClickColor}: {
     colors: string[],
