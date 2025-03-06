@@ -1,5 +1,5 @@
 import {auth} from "@/auth";
-import EventDetailPage from "@/features/event/components/detail/event-detail-page";
+import EventDetailPage from "@/features/event/components/detail/EventDetailPage";
 import crypto from "crypto-js";
 
 export default async function EventDetailPageHost() {

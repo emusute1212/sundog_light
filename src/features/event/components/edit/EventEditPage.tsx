@@ -1,7 +1,7 @@
 "use client"
 import {useEffect, useState} from "react";
 import {EventDetail} from "@/features/event/types/event-detail";
-import EventEditSection from "@/features/event/components/edit/section/event-edit-section";
+import EventEditSection from "@/features/event/components/edit/section/EventEditSection";
 import {useParams} from "next/navigation";
 
 export default function EventEditPage({userId}: { userId: string }) {

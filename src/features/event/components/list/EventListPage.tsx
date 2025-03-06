@@ -1,7 +1,7 @@
 "use client"
 import {useEffect, useState} from "react";
 import {EventDetail} from "@/features/event/types/event-detail";
-import EventListSection from "@/features/event/components/list/section/event-list-section";
+import EventListSection from "@/features/event/components/list/section/EventListSection";
 
 export default function EventListPage({userId}: { userId: string }) {
     const [eventList, setEventList] = useState<EventDetail[]>([])

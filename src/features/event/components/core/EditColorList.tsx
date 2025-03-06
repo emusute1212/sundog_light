@@ -1,5 +1,5 @@
-import AddColorButton from "@/features/event/components/core/add-color-button";
-import SelectableColor from "@/features/event/components/core/selectable-color";
+import AddColorButton from "@/features/event/components/core/AddColorButton";
+import SelectableColor from "@/features/event/components/core/SelectableColor";
 
 export default function EditColorList({colors, onSelectColorIndex, onAddColor}: {
     colors: string[] | undefined,

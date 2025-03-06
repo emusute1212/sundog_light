@@ -1,5 +1,5 @@
 import {auth} from "@/auth";
-import EventCreatePage from "@/features/event/components/create/event-create-page";
+import EventCreatePage from "@/features/event/components/create/EventCreatePage";
 import crypto from 'crypto-js';
 
 export default async function EventCreatePageHost() {

@@ -1,5 +1,5 @@
 "use client"
-import EventEditSection from "@/features/event/components/edit/section/event-edit-section";
+import EventEditSection from "@/features/event/components/edit/section/EventEditSection";
 
 export default function EventCreatePage({userId}: { userId: string }) {
     return (

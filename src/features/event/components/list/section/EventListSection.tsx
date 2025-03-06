@@ -1,6 +1,6 @@
 import {EventDetail} from "@/features/event/types/event-detail";
-import EventItemComponent from "@/features/event/components/list/section/component/event-item-component";
-import EventAddComponent from "@/features/event/components/list/section/component/event-add-component";
+import EventItemComponent from "@/features/event/components/list/section/component/EventItemComponent";
+import EventAddComponent from "@/features/event/components/list/section/component/EventAddComponent";
 
 export default function EventListSection({events}: { events: EventDetail[] }) {
     return (

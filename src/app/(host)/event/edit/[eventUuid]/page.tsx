@@ -1,5 +1,5 @@
 import {auth} from "@/auth";
-import EventEditPage from "@/features/event/components/edit/event-edit-page";
+import EventEditPage from "@/features/event/components/edit/EventEditPage";
 import crypto from "crypto-js";
 
 export default async function EventEditPageHost() {
