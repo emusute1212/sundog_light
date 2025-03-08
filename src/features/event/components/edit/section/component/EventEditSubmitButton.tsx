@@ -16,7 +16,6 @@ export default function EventEditSubmitButton({request}: {
             },
             body: JSON.stringify(request),
         });
-        // router.push(`/event/detail/${JSON.parse(await response.json()).uuid}`);
         router.push(`/event/list`);
     };
     const onClickDeleteButton = async () => {
@@ -32,15 +31,15 @@ export default function EventEditSubmitButton({request}: {
         }
     }
     return (
-        <div className={`flex flex-col`}>
+        <div className={`flex flex-col items-center w-full p-4 gap-2 mt-8`}>
             <button
-                className={`mt-2 bg-black text-white px-4 py-2 rounded-lg`}
+                className={`inline-flex bg-black text-white px-6 py-2 rounded-lg border border-black hover:bg-gray-700 transition-colors`}
                 onClick={onClickSubmitButton}
             >イベントを保存する
             </button>
             {isEdit && (
                 <button
-                    className={`mt-2 bg-white text-black px-4 py-2 rounded-lg border border-black`}
+                    className={`inline-flex bg-white text-black px-6 py-2 rounded-lg border border-black hover:bg-gray-100 transition-colors`}
                     onClick={onClickDeleteButton}
                 >イベントを削除する
                 </button>

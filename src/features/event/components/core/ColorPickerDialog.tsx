@@ -18,10 +18,10 @@ export function ColorPickerDialog({isOpen, defaultColor, onSelectColor, onCloseR
                             }}
                         />
                         <button
-                            className="mt-2 bg-red-500 text-white px-4 py-2 rounded-lg"
+                            className="mt-2 bg-black text-white px-4 py-2 rounded-lg"
                             onClick={() => onCloseRequest()}
                         >
-                            Close
+                            色を追加
                         </button>
                     </div>
                 </div>

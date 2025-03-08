@@ -7,7 +7,7 @@ export default function EditColorList({colors, onSelectColorIndex, onAddColor}: 
     onAddColor: () => void,
 }) {
     return (
-        <div className={`grid grid-cols-4 gap-4`}>
+        <div className={`flex flex-wrap gap-4 justify-center`}>
             {colors?.map((color: string, index: number) => {
                     return (
                         <SelectableColor

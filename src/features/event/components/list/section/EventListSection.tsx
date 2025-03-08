@@ -4,7 +4,7 @@ import EventAddComponent from "@/features/event/components/list/section/componen
 
 export default function EventListSection({events}: { events: EventDetail[] }) {
     return (
-        <div className={`grid grid-rows-none`}>
+        <section className={`grid grid-rows-none px-8`}>
             {events.map((event: EventDetail) => {
                     return (
                         <EventItemComponent
@@ -15,6 +15,6 @@ export default function EventListSection({events}: { events: EventDetail[] }) {
                 }
             )}
             <EventAddComponent/>
-        </div>
+        </section>
     );
 }

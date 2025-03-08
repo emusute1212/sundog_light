@@ -4,7 +4,7 @@ export default function SelectableColor({color, onClickColor}: {
 }) {
     return (
         <div
-            className={`p-4 rounded-lg shadow-md aspect-square`}
+            className={`p-2 rounded-lg shadow-md aspect-square w-24`}
             onClick={() => {
                 onClickColor(color);
             }}
