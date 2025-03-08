@@ -1,3 +1,5 @@
+import { LogOut } from "lucide-react";
+
 export default function SundogLightHeader({onClickLogoutButton}: {
     onClickLogoutButton: () => void,
 }) {
@@ -42,9 +44,10 @@ export default function SundogLightHeader({onClickLogoutButton}: {
             {/* ログアウトボタン */}
             <button 
                 onClick={onClickLogoutButton}
-                className="w-20 hover:text-gray-600 transition-colors"
+                className="flex items-center justify-center gap-2 hover:text-gray-600 transition-colors"
             >
-                ログアウト
+                <LogOut size={18}/>
+                <span>ログアウト</span>
             </button>
         </div>
     );
