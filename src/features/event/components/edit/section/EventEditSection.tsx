@@ -32,44 +32,41 @@ export default function EventEditSection({userId, eventDetail = undefined}: {
         }
     }
     return (
-        <div>
-            <div className={`flex flex-col space-y-2`}>
+        <section className={`flex-1 flex flex-col px-8`}>
+            <div className={`flex flex-col space-y-2 mb-8`}>
                 <label>イベント名</label>
                 <textarea
-                    className={`border border-black`}
+                    className={`border border-gray-400 rounded-md`}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
             </div>
-            <div>
-                <span>色一覧</span>
-                <EditColorList
-                    colors={colors}
-                    onSelectColorIndex={(targetIndex: number) => {
-                        setSelectedIndex(targetIndex)
-                        setIsOpenColorPicker(true)
-                    }}
-                    onAddColor={() => {
-                        const addedColors = [...colors, `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0")}`];
-                        setColors(addedColors)
-                        setSelectedIndex(addedColors.length - 1)
-                        setIsOpenColorPicker(true)
-                    }}/>
-                <ColorPickerDialog
-                    isOpen={isOpenColorPicker}
-                    defaultColor={colors[selectedIndex]}
-                    onSelectColor={(color: string) => {
-                        setColors(
-                            colors?.map((it, i) =>
-                                i == selectedIndex ? color : it
-                            ) ?? []
-                        )
-                    }}
-                    onCloseRequest={() => setIsOpenColorPicker(false)}
-                />
-            </div>
+            <EditColorList
+                colors={colors}
+                onSelectColorIndex={(targetIndex: number) => {
+                    setSelectedIndex(targetIndex)
+                    setIsOpenColorPicker(true)
+                }}
+                onAddColor={() => {
+                    const addedColors = [...colors, `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0")}`];
+                    setColors(addedColors)
+                    setSelectedIndex(addedColors.length - 1)
+                    setIsOpenColorPicker(true)
+                }}/>
+            <ColorPickerDialog
+                isOpen={isOpenColorPicker}
+                defaultColor={colors[selectedIndex]}
+                onSelectColor={(color: string) => {
+                    setColors(
+                        colors?.map((it, i) =>
+                            i == selectedIndex ? color : it
+                        ) ?? []
+                    )
+                }}
+                onCloseRequest={() => setIsOpenColorPicker(false)}
+            />
             <EventEditSubmitButton
                 request={request}/>
-        </div>
+        </section>
     );
 }

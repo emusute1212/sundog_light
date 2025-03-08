@@ -5,7 +5,7 @@ export default function AddColorButton({onAddColorButton}: {
 }) {
     return (
         <div
-            className={`p-4 rounded-lg shadow-md aspect-square`}
+            className={`p-2 rounded-lg shadow-md aspect-square w-24`}
             onClick={() => {
                 onAddColorButton();
             }}

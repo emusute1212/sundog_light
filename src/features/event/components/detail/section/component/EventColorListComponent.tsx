@@ -5,7 +5,7 @@ export default function EventColorListComponent({colors, onClickColor}: {
     onClickColor: (color: string) => void,
 }) {
     return (
-        <div className={`grid grid-cols-4 gap-4`}>
+        <div className={`flex flex-wrap gap-4 justify-center`}>
             {colors.map((color: string, i: number) => {
                     return (
                         <SelectableColor
