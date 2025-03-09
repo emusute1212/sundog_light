@@ -8,11 +8,10 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
-    // APIリクエストの場合のみチェック
-    if (request.nextUrl.pathname.startsWith("/api/")) {
-        const session = await auth();
+    const session = await auth();
 
-        // 未認証の場合は403を返す
+    // APIリクエスト（サーバー向け）の処理
+    if (request.nextUrl.pathname.startsWith("/api/")) {
         if (!session) {
             return new NextResponse(
                 JSON.stringify({ error: "認証が必要です" }),
@@ -24,6 +23,20 @@ export async function middleware(request: NextRequest) {
                 }
             );
         }
+        return NextResponse.next();
+    }
+
+    // クライアント向けページの処理
+    // ログインページはスキップ
+    if (request.nextUrl.pathname === "/login") {
+        return NextResponse.next();
+    }
+
+    // 未認証の場合はログインページにリダイレクト
+    if (!session) {
+        const url = new URL("/login", request.url);
+        url.searchParams.set("callbackUrl", request.nextUrl.pathname);
+        return NextResponse.redirect(url);
     }
 
     return NextResponse.next();
@@ -31,5 +44,14 @@ export async function middleware(request: NextRequest) {
 
 // ミドルウェアを適用するパスを指定
 export const config = {
-    matcher: ["/api/event/:path*", "/api/color/:path*", "/api/pusher/:path*"],
+    matcher: [
+        // APIルート
+        "/api/event/:path*",
+        "/api/color/:path*",
+        "/api/pusher/:path*",
+        // クライアントページ
+        "/event/:path*",
+        // ログインページ
+        "/login",
+    ],
 };
