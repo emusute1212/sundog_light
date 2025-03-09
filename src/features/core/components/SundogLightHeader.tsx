@@ -1,22 +1,22 @@
 import { LogOut } from "lucide-react";
 
 export default function SundogLightHeader({
-  isShowLogoutButton,
-  onClickLogoutButton,
+    isShowLogoutButton,
+    onClickLogoutButton,
 }: {
-  isShowLogoutButton: boolean;
-  onClickLogoutButton: () => void;
+    isShowLogoutButton: boolean;
+    onClickLogoutButton: () => void;
 }) {
-  return (
-    <div className={`flex items-center justify-between px-4 relative`}>
-      {/* 中央揃えのためのダミー要素 */}
-      <div className="w-20" />
+    return (
+        <div className={`flex items-center justify-between px-4 relative`}>
+            {/* 中央揃えのためのダミー要素 */}
+            <div className="w-20" />
 
-      {/* タイトル */}
-      <div className="relative">
-        {/* アウトライン付きの背面テキスト */}
-        <h1
-          className={`
+            {/* タイトル */}
+            <div className="relative">
+                {/* アウトライン付きの背面テキスト */}
+                <h1
+                    className={`
                     text-4xl 
                     text-center 
                     font-extrabold 
@@ -24,13 +24,13 @@ export default function SundogLightHeader({
                     text-black
                     [-webkit-text-stroke:2px_black]
                 `}
-        >
-          SUNDOG Light
-        </h1>
+                >
+                    SUNDOG Light
+                </h1>
 
-        {/* グラデーションの前面テキスト */}
-        <h1
-          className={`
+                {/* グラデーションの前面テキスト */}
+                <h1
+                    className={`
                     text-4xl 
                     text-center 
                     font-extrabold 
@@ -44,23 +44,23 @@ export default function SundogLightHeader({
                     from-gray-200
                     to-cyan-200
                 `}
-        >
-          SUNDOG Light
-        </h1>
-      </div>
+                >
+                    SUNDOG Light
+                </h1>
+            </div>
 
-      {/* ログアウトボタン */}
-      {isShowLogoutButton ? (
-        <button
-          onClick={onClickLogoutButton}
-          className="flex items-center justify-center gap-2 hover:text-gray-600 transition-colors"
-        >
-          <LogOut size={18} />
-          <span>ログアウト</span>
-        </button>
-      ) : (
-        <div className="w-20" />
-      )}
-    </div>
-  );
+            {/* ログアウトボタン */}
+            {isShowLogoutButton ? (
+                <button
+                    onClick={onClickLogoutButton}
+                    className="flex items-center justify-center gap-2 hover:text-gray-600 transition-colors"
+                >
+                    <LogOut size={18} />
+                    <span>ログアウト</span>
+                </button>
+            ) : (
+                <div className="w-20" />
+            )}
+        </div>
+    );
 }
