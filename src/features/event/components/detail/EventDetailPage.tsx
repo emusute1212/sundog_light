@@ -1,27 +1,28 @@
-"use client"
-import {useParams} from "next/navigation";
-import {useEffect, useState} from "react";
-import {EventDetail} from "@/features/event/types/event-detail";
-import {EventSendableColor} from "@/features/event/types/event-sendable-color";
+"use client";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { EventDetail } from "@/features/event/types/event-detail";
+import { EventSendableColor } from "@/features/event/types/event-sendable-color";
 import EventDetailSection from "@/features/event/components/detail/section/EventDetailSection";
 
-export default function EventDetailPage({userId}: { userId: string }) {
-    const params = useParams()
+export default function EventDetailPage() {
+    const params = useParams();
     const eventUuid = params.eventUuid as string;
-    const [eventDetail, setEventDetail] = useState<EventDetail>()
+    const [eventDetail, setEventDetail] = useState<EventDetail>();
     useEffect(() => {
         const callApi = async () => {
             const response = await fetch(`/api/event/${eventUuid}`, {
-                method: "POST",
+                method: "GET",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({key: userId}),
             });
-            setEventDetail(JSON.parse(await response.json()).result as EventDetail)
-        }
-        callApi().then()
-    }, [userId, eventUuid]);
+            setEventDetail(
+                JSON.parse(await response.json()).result as EventDetail
+            );
+        };
+        callApi().then();
+    }, [eventUuid]);
     const onClickColor = async (color: string) => {
         const eventSendableColor: EventSendableColor = {
             uuid: eventUuid,
@@ -37,14 +38,9 @@ export default function EventDetailPage({userId}: { userId: string }) {
     };
 
     if (eventDetail === undefined) {
-        return (
-            <div/>
-        )
+        return <div />;
     }
     return (
-        <EventDetailSection
-            event={eventDetail}
-            onClickColor={onClickColor}
-        />
+        <EventDetailSection event={eventDetail} onClickColor={onClickColor} />
     );
 }
