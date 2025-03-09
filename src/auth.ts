@@ -46,6 +46,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
             return token;
         },
+        async redirect({ baseUrl }) {
+            // Detailページに飛ばす場合、アカウントを間違えるとエラーになるので、リストに飛ばしや方が親切と判断
+            return `${baseUrl}/event/list`;
+        },
     },
     pages: {
         signIn: "/login",
