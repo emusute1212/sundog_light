@@ -6,14 +6,17 @@ import EventDeleteConfirmDialog from "./EventDeleteConfirmDialog";
 
 export default function EventEditSubmitButton({
     request,
+    isValid,
 }: {
     request: EventCreateRequest | EventUpdateRequest;
+    isValid: boolean;
 }) {
     const router = useRouter();
     const isEdit: boolean = request.type == "update-request";
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     const onClickSubmitButton = async () => {
+        if (!isValid) return;
         await fetch(isEdit ? "/api/event/update" : "/api/event/create", {
             method: isEdit ? "PUT" : "POST",
             headers: {
@@ -42,8 +45,13 @@ export default function EventEditSubmitButton({
     return (
         <div className={`flex flex-col items-center w-full p-4 gap-2 mt-8`}>
             <button
-                className={`inline-flex bg-black text-white px-6 py-2 rounded-lg border border-black hover:bg-gray-700 transition-colors`}
+                className={`inline-flex px-6 py-2 rounded-lg border transition-colors ${
+                    isValid
+                        ? "bg-black text-white border-black hover:bg-gray-700"
+                        : "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed"
+                }`}
                 onClick={onClickSubmitButton}
+                disabled={!isValid}
             >
                 イベントを保存する
             </button>
