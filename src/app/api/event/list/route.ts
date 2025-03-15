@@ -5,13 +5,31 @@ import { auth } from "@/auth";
 const redis = Redis.fromEnv();
 
 export async function GET() {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return Response.json({ error: "認証が必要です" }, { status: 403 });
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return Response.json({ error: "認証が必要です" }, { status: 403 });
+        }
+
+        const userEventsKey = session.user.id;
+        let result: EventDetail[];
+
+        try {
+            result = await redis.lrange(userEventsKey, 0, -1);
+        } catch (error) {
+            console.error("Redisからのデータ取得に失敗:", error);
+            return Response.json(
+                { error: "サーバーでエラーが発生しました" },
+                { status: 500 }
+            );
+        }
+
+        return Response.json(JSON.stringify({ result }), { status: 200 });
+    } catch (error) {
+        console.error("予期せぬエラーが発生:", error);
+        return Response.json(
+            { error: "サーバーでエラーが発生しました" },
+            { status: 500 }
+        );
     }
-
-    const userEventsKey = session.user.id;
-    const result: EventDetail[] = await redis.lrange(userEventsKey, 0, -1);
-
-    return Response.json(JSON.stringify({ result }), { status: 200 });
 }
