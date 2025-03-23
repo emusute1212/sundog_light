@@ -3,6 +3,8 @@ import { EventUpdateRequest } from "@/features/event/types/event-update-request"
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import EventDeleteConfirmDialog from "./EventDeleteConfirmDialog";
+import { LoadingDialog } from "../../../core/LoadingDialog";
+import toast from "react-hot-toast";
 
 export default function EventEditSubmitButton({
     request,
@@ -14,32 +16,64 @@ export default function EventEditSubmitButton({
     const router = useRouter();
     const isEdit: boolean = request.type == "update-request";
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const onClickSubmitButton = async () => {
         if (!isValid) return;
-        await fetch(isEdit ? "/api/event/update" : "/api/event/create", {
-            method: isEdit ? "PUT" : "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(request),
-        });
-        router.push(`/event/list`);
-    };
-    const onClickDeleteButton = async () => {
-        if (isEdit) {
-            await fetch(
-                `/api/event/remove/${
-                    (request as EventUpdateRequest).eventDetail.uuid
-                }`,
+        setLoading(true);
+        try {
+            const response = await fetch(
+                isEdit ? "/api/event/update" : "/api/event/create",
                 {
-                    method: "DELETE",
+                    method: isEdit ? "PUT" : "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
+                    body: JSON.stringify(request),
                 }
             );
-            router.push(`/event/list`);
+            if (!response.ok) {
+                toast.error(
+                    `エラーが発生しました！\nエラーコード：${response.status}\n${response.statusText}`
+                );
+            } else {
+                router.push(`/event/list`);
+            }
+        } catch (error) {
+            console.error("イベント一覧の取得に失敗しました:", error);
+            toast.error(`エラーが発生しました！`);
+        } finally {
+            setLoading(false);
+        }
+    };
+    const onClickDeleteButton = async () => {
+        if (isEdit) {
+            setLoading(true);
+            try {
+                const response = await fetch(
+                    `/api/event/remove/${
+                        (request as EventUpdateRequest).eventDetail.uuid
+                    }`,
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+                if (!response.ok) {
+                    toast.error(
+                        `エラーが発生しました！\nエラーコード：${response.status}\n${response.statusText}`
+                    );
+                } else {
+                    router.push(`/event/list`);
+                }
+            } catch (error) {
+                console.error("イベント一覧の取得に失敗しました:", error);
+                toast.error(`エラーが発生しました！`);
+            } finally {
+                setLoading(false);
+            }
         }
     };
     return (
@@ -71,6 +105,7 @@ export default function EventEditSubmitButton({
                     )}
                 </>
             )}
+            {loading && <LoadingDialog />}
         </div>
     );
 }
