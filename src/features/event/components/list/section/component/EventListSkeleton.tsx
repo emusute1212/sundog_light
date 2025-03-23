@@ -1,3 +1,5 @@
+import Skeleton from "../../../core/Skelton";
+
 export default function EventListSkeleton() {
     return (
         <div
@@ -11,13 +13,12 @@ export default function EventListSkeleton() {
                 rounded-md 
                 shadow-md 
                 mb-4
-                animate-pulse
             `}
         >
             {/* Info アイコンの位置 */}
-            <div className="w-6 h-6 bg-gray-200 rounded-full" />
+            <Skeleton className="w-6 h-6" />
             {/* イベント名の位置 */}
-            <div className="flex-1 h-6 bg-gray-200 rounded mx-2" />
+            <Skeleton className="flex-1 h-6 mx-2" />
         </div>
     );
 }
