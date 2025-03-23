@@ -1,10 +1,17 @@
-import {HexColorPicker} from "react-colorful";
+import { HexColorPicker } from "react-colorful";
 
-export function ColorPickerDialog({isOpen, defaultColor, onSelectColor, onCloseRequest}: {
-    isOpen: boolean,
-    defaultColor: string,
-    onSelectColor: (color: string) => void,
-    onCloseRequest: () => void,
+export function ColorPickerDialog({
+    isOpen,
+    defaultColor,
+    onSelectColor,
+    onCloseRequest,
+    onDeleteRequest,
+}: {
+    isOpen: boolean;
+    defaultColor: string;
+    onSelectColor: (color: string) => void;
+    onCloseRequest: () => void;
+    onDeleteRequest: () => void;
 }) {
     return (
         <div>
@@ -14,18 +21,29 @@ export function ColorPickerDialog({isOpen, defaultColor, onSelectColor, onCloseR
                         <HexColorPicker
                             color={defaultColor}
                             onChange={(color) => {
-                                onSelectColor(color)
+                                onSelectColor(color);
                             }}
                         />
-                        <button
-                            className="mt-2 bg-black text-white px-4 py-2 rounded-lg"
-                            onClick={() => onCloseRequest()}
-                        >
-                            色を追加
-                        </button>
+                        <div>
+                            <button
+                                className="mt-2 bg-black text-white px-4 py-2 rounded-lg"
+                                onClick={() => onCloseRequest()}
+                            >
+                                確定
+                            </button>
+                            <button
+                                className="ms-2 mt-2 bg-red-600 text-white px-4 py-2 rounded-lg"
+                                onClick={() => {
+                                    onDeleteRequest();
+                                    onCloseRequest();
+                                }}
+                            >
+                                削除
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
         </div>
-    )
+    );
 }

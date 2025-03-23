@@ -92,6 +92,11 @@ export default function EventEditSection({
                         ) ?? []
                     );
                 }}
+                onDeleteRequest={() => {
+                    setColors(
+                        colors?.filter((_, index) => index !== selectedIndex)
+                    );
+                }}
                 onCloseRequest={() => setIsOpenColorPicker(false)}
             />
             <EventEditSubmitButton request={request} isValid={isValid} />
