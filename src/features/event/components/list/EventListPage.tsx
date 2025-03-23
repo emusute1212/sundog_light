@@ -42,7 +42,7 @@ export default function EventListPage() {
     }, []);
 
     if (error) {
-        return <CoreErrorComponent coreError={error}></CoreErrorComponent>;
+        return <CoreErrorComponent coreError={error} />;
     }
 
     return <EventListSection isLoading={isLoading} events={eventList} />;
