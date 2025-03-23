@@ -1,4 +1,6 @@
+"use client";
 import { LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function SundogLightHeader({
     isShowLogoutButton,
@@ -7,13 +9,19 @@ export default function SundogLightHeader({
     isShowLogoutButton: boolean;
     onClickLogoutButton: () => void;
 }) {
+    const router = useRouter();
     return (
         <div className={`flex items-center justify-between px-4 relative`}>
             {/* 中央揃えのためのダミー要素 */}
             <div className="w-20" />
 
             {/* タイトル */}
-            <div className="relative">
+            <div
+                onClick={() => {
+                    router.push("/event/list");
+                }}
+                className="relative select-none cursor-pointer"
+            >
                 {/* アウトライン付きの背面テキスト */}
                 <h1
                     className={`
