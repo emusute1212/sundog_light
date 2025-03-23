@@ -1,6 +1,7 @@
 import { auth, signOut } from "@/auth";
 import SundogLightHeader from "@/features/core/components/SundogLightHeader";
 import React from "react";
+import { Toaster } from "react-hot-toast";
 
 export default async function RootLayout({
     children,
@@ -24,6 +25,7 @@ export default async function RootLayout({
                 />
             </header>
             <main className={`w-full flex-grow max-w-lg`}>{children}</main>
+            <Toaster position="top-center" />
         </div>
     );
 }
