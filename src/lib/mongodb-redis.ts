@@ -1,10 +1,17 @@
 import clientPromise from "./mongodb";
-import { Collection, Db } from "mongodb";
+import { Collection, Db, Document } from "mongodb";
 
 // ユーザーIDとそのイベントリストを格納するためのコレクション型
 interface UserEventsDoc {
     _id: string; // ユーザーIDをドキュメントIDとして使用
     events: string[]; // JSON文字列の配列として保存（Redisと同様）
+}
+
+// MongoDB集計結果の型定義
+interface EventsSizeResult extends Document {
+    _id: string;
+    events?: string[];
+    eventsSize?: number;
 }
 
 // Redisの代わりに使用するMongoDBクラス
@@ -81,14 +88,12 @@ export class MongoRedis {
         );
 
         // 更新後の長さを返す（最新のドキュメントサイズを効率的に取得）
-        const projection = {
-            projection: { _id: 0, eventsLength: { $size: "$events" } },
-        };
-        const result = await this.userEventsCollection.findOne(
-            { _id: key },
-            projection
-        );
-        return (result?.eventsLength || 1) as number;
+        const result =
+            await this.userEventsCollection.findOne<EventsSizeResult>(
+                { _id: key },
+                { projection: { _id: 0, eventsSize: { $size: "$events" } } }
+            );
+        return result?.eventsSize || 1;
     }
 
     // RedisのLRANGE相当: 指定された範囲の値を取得して、JSON.parseで解析
@@ -152,12 +157,18 @@ export class MongoRedis {
             if (result.modifiedCount === 0) {
                 // インデックスが範囲外の可能性があるが、直接エラーはわからないので
                 // 追加の確認をする
-                const doc = await this.userEventsCollection.findOne(
-                    { _id: key },
-                    { projection: { eventsLength: { $size: "$events" } } }
-                );
+                const doc =
+                    await this.userEventsCollection.findOne<EventsSizeResult>(
+                        { _id: key },
+                        {
+                            projection: {
+                                _id: 0,
+                                eventsSize: { $size: "$events" },
+                            },
+                        }
+                    );
 
-                if (!doc || doc.eventsLength <= index) {
+                if (!doc || (doc.eventsSize || 0) <= index) {
                     throw new Error("インデックスが範囲外です");
                 }
             }

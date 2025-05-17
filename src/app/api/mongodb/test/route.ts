@@ -4,7 +4,6 @@ import clientPromise from "@/lib/mongodb";
 // MongoDB接続テスト用のエンドポイント
 export async function GET() {
     const startTime = Date.now();
-    let connectionSuccess = false;
     let error = null;
 
     try {
@@ -13,8 +12,6 @@ export async function GET() {
 
         // ping操作で接続を確認
         await client.db("admin").command({ ping: 1 });
-
-        connectionSuccess = true;
 
         // 基本的な情報を取得
         const db = client.db("sundogLight");
