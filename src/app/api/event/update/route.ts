@@ -1,9 +1,9 @@
-import { Redis } from "@upstash/redis";
 import { EventDetail } from "@/features/event/types/event-detail";
 import { EventUpdateRequest } from "@/features/event/types/event-update-request";
 import { auth } from "@/auth";
+import { MongoRedis } from "@/lib/mongodb-redis";
 
-const redis = Redis.fromEnv();
+const redis = MongoRedis.fromEnv();
 
 export async function PUT(req: Request) {
     try {
@@ -80,7 +80,7 @@ export async function PUT(req: Request) {
         try {
             eventDetails = await redis.lrange(userEventsKey, 0, -1);
         } catch (error) {
-            console.error("Redisからのデータ取得に失敗:", error);
+            console.error("データ取得に失敗:", error);
             return Response.json(
                 { error: "サーバーでエラーが発生しました" },
                 { status: 500 }
@@ -106,7 +106,7 @@ export async function PUT(req: Request) {
             );
             return Response.json(request.eventDetail, { status: 200 });
         } catch (error) {
-            console.error("Redisへのデータ更新に失敗:", error);
+            console.error("データ更新に失敗:", error);
             return Response.json(
                 { error: "サーバーでエラーが発生しました" },
                 { status: 500 }

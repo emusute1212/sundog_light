@@ -1,8 +1,8 @@
-import { Redis } from "@upstash/redis";
 import { EventDetail } from "@/features/event/types/event-detail";
 import { auth } from "@/auth";
+import { MongoRedis } from "@/lib/mongodb-redis";
 
-const redis = Redis.fromEnv();
+const redis = MongoRedis.fromEnv();
 
 export async function GET(
     _: Request,
@@ -27,7 +27,7 @@ export async function GET(
         try {
             eventDetails = await redis.lrange(userEventsKey, 0, -1);
         } catch (error) {
-            console.error("Redisからのデータ取得に失敗:", error);
+            console.error("データ取得に失敗:", error);
             return Response.json(
                 { error: "サーバーでエラーが発生しました" },
                 { status: 500 }
