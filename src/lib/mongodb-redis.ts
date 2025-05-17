@@ -43,7 +43,8 @@ export class MongoRedis {
     async lpush(key: string, value: string): Promise<number> {
         await this.initIfNeeded();
 
-        const result = await this.userEventsCollection?.updateOne(
+        // 使用しない結果は削除し、直接更新操作を実行
+        await this.userEventsCollection?.updateOne(
             { _id: key },
             { $push: { events: { $each: [value], $position: 0 } } },
             { upsert: true }
@@ -105,7 +106,7 @@ export class MongoRedis {
         }
 
         // 対象の値と一致する要素のインデックスを特定
-        let targetIndices: number[] = [];
+        const targetIndices: number[] = [];
         for (let i = 0; i < doc.events.length; i++) {
             if (doc.events[i] === value) {
                 targetIndices.push(i);
