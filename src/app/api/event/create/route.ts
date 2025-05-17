@@ -1,10 +1,10 @@
-import { Redis } from "@upstash/redis";
 import { EventDetail } from "@/features/event/types/event-detail";
 import { randomUUID } from "crypto";
 import { EventCreateRequest } from "@/features/event/types/event-create-request";
 import { auth } from "@/auth";
+import { MongoRedis } from "@/lib/mongodb-redis";
 
-const redis = Redis.fromEnv();
+const redis = MongoRedis.fromEnv();
 
 // ヘルパー関数として内部で定義
 function createEventDetail(name: string, colors: string[]): EventDetail {
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
             const userEventsKey = session.user.id;
             await redis.lpush(userEventsKey, JSON.stringify(eventDetail));
         } catch (error) {
-            console.error("Redisへのデータ保存に失敗:", error);
+            console.error("データ保存に失敗:", error);
             return Response.json(
                 { error: "サーバーでエラーが発生しました" },
                 { status: 500 }
