@@ -2,15 +2,19 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "SUNDOG Light | 色を使ってイベントを盛り上げよう",
-    description:
-        "ホストが色を変更すると、参加者の画面の色がリアルタイムで変わるイベントアプリ",
+    title: "スマホをペンライト代わりに！「SUNDOG Light」",
+    description: `
+アプリ不要でスマホがペンライトの代わりになります！結婚式や学園祭イベントなど中小イベントでも使いやすく誰でも無料で使えます。
+使い方は簡単！参加者はホストが作成したQRコードを読み込むだけ！これだけで、ホストは参加者のスマホ画面を任意の色に操作できます。
+        `,
     openGraph: {
         type: "website",
         url: "https://sundog-light.vercel.app",
-        title: "イベント盛り上げアプリ",
-        description:
-            "ホストが色を変更すると、参加者の画面の色がリアルタイムで変わるイベントアプリ",
+        title: "スマホをペンライト代わりに！「SUNDOG Light」",
+        description: `
+アプリ不要でスマホがペンライトの代わりになります！結婚式や学園祭イベントなど中小イベントでも使いやすく誰でも無料で使えます。
+使い方は簡単！参加者はホストが作成したQRコードを読み込むだけ！これだけで、ホストは参加者のスマホ画面を任意の色に操作できます。
+        `,
         images: [
             {
                 url: "/sundog.png",
