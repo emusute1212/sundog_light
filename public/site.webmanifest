@@ -1,0 +1,17 @@
+{
+    "name": "SUNDOG Light",
+    "short_name": "SUNDOG Light",
+    "description": "スマホをペンライト代わりに！アプリ不要で誰でも無料で使えます。",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#ffffff",
+    "icons": [
+        {
+            "src": "/sundog.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+} 
