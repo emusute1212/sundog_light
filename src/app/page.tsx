@@ -30,34 +30,60 @@ export default function LandingPage() {
     return (
         <main className="min-h-screen bg-white text-black font-sans">
             {/* Hero Section */}
-            <section className="text-center py-24 px-4 bg-sky-200">
-                <div className="relative mb-6">
-                    {/* アウトライン付きの背面テキスト */}
-                    <h1
-                        className={`w-full text-4xl md:text-6xl text-center font-extrabold p-2 text-black [-webkit-text-stroke:2px_black] drop-shadow-lg`}
-                    >
-                        SUNDOG Light
-                    </h1>
+            <section className="relative text-center py-24 px-4 min-h-screen flex items-center overflow-hidden">
+                {/* 背景動画 */}
+                <video
+                    className="absolute inset-0 w-full h-full object-cover z-0"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    poster="/lp/background.png"
+                    aria-label="SUNDOG Light デモ動画 - スマホがペンライトのように光る様子"
+                >
+                    <source src="/lp/top_movie.mp4" type="video/mp4" />
+                    {/* フォールバック画像 */}
+                    <img
+                        src="/lp/background.png"
+                        alt="SUNDOG Light - スマホをペンライト代わりにするサービスのデモ画面"
+                        className="w-full h-full object-cover"
+                    />
+                </video>
 
-                    {/* グラデーションの前面テキスト */}
-                    <h1
-                        className={`w-full text-4xl md:text-6xl text-center font-extrabold p-2 absolute top-0 left-0 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-cyan-200`}
-                    >
-                        SUNDOG Light
-                    </h1>
-                </div>
-                <p className="text-xl md:text-2xl mb-10">
-                    あなたが選んだ色で、みんなのスマホが一斉に光る。
-                    <br />
-                    スマホを振って、光と歓声のウェーブをつくろう。
-                </p>
-                <div className="flex justify-center gap-4">
-                    <Link
-                        href="/login"
-                        className="bg-black text-white font-semibold py-3 px-6 rounded-2xl shadow-lg hover:scale-105 transition"
-                    >
-                        今すぐ無料ではじめる
-                    </Link>
+                {/* オーバーレイ */}
+                <div className="absolute inset-0 bg-black bg-opacity-30 z-10"></div>
+
+                {/* コンテンツ */}
+                <div className="relative z-20 w-full">
+                    <div className="relative mb-6">
+                        {/* アウトライン付きの背面テキスト */}
+                        <h1
+                            className={`w-full text-4xl md:text-6xl text-center font-extrabold p-2 text-white [-webkit-text-stroke:2px_white] drop-shadow-2xl`}
+                        >
+                            SUNDOG Light
+                        </h1>
+
+                        {/* グラデーションの前面テキスト */}
+                        <h1
+                            className={`w-full text-4xl md:text-6xl text-center font-extrabold p-2 absolute top-0 left-0 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-cyan-200`}
+                        >
+                            SUNDOG Light
+                        </h1>
+                    </div>
+                    {/* SEO・アクセシビリティ用の非表示テキスト */}
+                    <p className="sr-only">
+                        あなたが選んだ色で、みんなのスマホが一斉に光る。
+                        スマホを振って、光と歓声のウェーブをつくろう。
+                    </p>
+                    <div className="flex justify-center gap-4">
+                        <Link
+                            href="/login"
+                            className="bg-white text-black font-semibold py-3 px-6 rounded-2xl shadow-lg hover:scale-105 transition backdrop-blur-sm"
+                        >
+                            今すぐ無料ではじめる
+                        </Link>
+                    </div>
                 </div>
             </section>
 
@@ -93,6 +119,13 @@ export default function LandingPage() {
                 <div className="max-w-4xl mx-auto grid gap-12 md:grid-cols-3 text-center">
                     <div>
                         <div className="text-4xl mb-4">1️⃣</div>
+                        <div className="mb-6">
+                            <img
+                                src="/lp/detail_1.png"
+                                alt="イベント作成画面のスクリーンショット"
+                                className="w-full max-w-xs h-64 mx-auto rounded-lg object-contain"
+                            />
+                        </div>
                         <h4 className="font-bold text-xl mb-2">
                             イベントを作成
                         </h4>
@@ -100,11 +133,25 @@ export default function LandingPage() {
                     </div>
                     <div>
                         <div className="text-4xl mb-4">2️⃣</div>
+                        <div className="mb-6">
+                            <img
+                                src="/lp/detail_2.png"
+                                alt="URLとQRコード共有画面のスクリーンショット"
+                                className="w-full max-w-xs h-64 mx-auto rounded-lg object-contain"
+                            />
+                        </div>
                         <h4 className="font-bold text-xl mb-2">URLを共有</h4>
                         <p>参加者にリンクやQRコードで共有しましょう。</p>
                     </div>
                     <div>
                         <div className="text-4xl mb-4">3️⃣</div>
+                        <div className="mb-6">
+                            <img
+                                src="/lp/detail_3.png"
+                                alt="色選択とスマホライト制御画面のスクリーンショット"
+                                className="w-full max-w-xs h-64 mx-auto rounded-lg object-contain"
+                            />
+                        </div>
                         <h4 className="font-bold text-xl mb-2">
                             色を選ぶだけ！
                         </h4>
