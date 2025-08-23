@@ -7,11 +7,20 @@ interface UserEventsDoc {
     events: string[]; // JSON文字列の配列として保存（Redisと同様）
 }
 
+// イベントごとの色の状態を格納するためのコレクション型
+interface EventColorStateDoc {
+    _id: string; // イベントUUIDをドキュメントIDとして使用
+    lastSelectedColor: string | null; // 最後に選択された色
+    hostUserId: string; // ホストのユーザーID
+}
+
 // Redisの代わりに使用するMongoDBクラス
 export class MongoRedis {
     private static instance: MongoRedis;
     private initialized = false;
     private userEventsCollection: Collection<UserEventsDoc> | null = null;
+    private eventColorStateCollection: Collection<EventColorStateDoc> | null =
+        null;
 
     private constructor() {}
 
@@ -35,6 +44,8 @@ export class MongoRedis {
             const db = client.db("sundogLight");
             this.userEventsCollection =
                 db.collection<UserEventsDoc>("userEvents");
+            this.eventColorStateCollection =
+                db.collection<EventColorStateDoc>("eventColorStates");
             this.initialized = true;
         }
     }
@@ -128,5 +139,42 @@ export class MongoRedis {
         );
 
         return targetIndices.length;
+    }
+
+    // イベントの色の状態を設定
+    async setEventColorState(
+        eventUuid: string,
+        color: string | null,
+        hostUserId: string
+    ): Promise<void> {
+        await this.initIfNeeded();
+
+        await this.eventColorStateCollection?.updateOne(
+            { _id: eventUuid },
+            {
+                $set: {
+                    lastSelectedColor: color,
+                    hostUserId: hostUserId,
+                },
+            },
+            { upsert: true }
+        );
+    }
+
+    // イベントの色の状態を取得
+    async getEventColorState(eventUuid: string): Promise<string | null> {
+        await this.initIfNeeded();
+
+        const doc = await this.eventColorStateCollection?.findOne({
+            _id: eventUuid,
+        });
+        return doc?.lastSelectedColor || null;
+    }
+
+    // イベントの色の状態を削除（イベント削除時用）
+    async deleteEventColorState(eventUuid: string): Promise<void> {
+        await this.initIfNeeded();
+
+        await this.eventColorStateCollection?.deleteOne({ _id: eventUuid });
     }
 }

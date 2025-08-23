@@ -8,6 +8,11 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
+    // /api/event/*/color へのリクエストは認証チェックをスキップ（クライアント用）
+    if (request.nextUrl.pathname.match(/^\/api\/event\/[^\/]+\/color$/)) {
+        return NextResponse.next();
+    }
+
     const session = await auth();
 
     // APIリクエスト（サーバー向け）の処理
