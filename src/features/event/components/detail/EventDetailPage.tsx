@@ -7,6 +7,7 @@ import EventDetailSection from "@/features/event/components/detail/section/Event
 import { CoreError } from "../../types/core-error";
 import EventDetailSkeleton from "./section/component/EventDetailSkelton";
 import CoreErrorComponent from "../core/CoreErrorComponent";
+import { LoadingDialog } from "../core/LoadingDialog";
 
 export default function EventDetailPage() {
     const params = useParams();
@@ -15,6 +16,7 @@ export default function EventDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<CoreError | null>(null);
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
+    const [isColorChanging, setIsColorChanging] = useState(false);
 
     useEffect(() => {
         const callApi = async () => {
@@ -61,25 +63,42 @@ export default function EventDetailPage() {
     }, [eventUuid]);
 
     const onClickColor = async (color: string) => {
-        // トグル機能: 同じ色をクリックした場合はnullを送信
-        const colorToSend = selectedColor === color ? null : color;
+        // 処理中は追加のクリックを防ぐ
+        if (isColorChanging) return;
 
-        const eventSendableColor: EventSendableColor = {
-            uuid: eventUuid,
-            color: colorToSend,
-        };
+        setIsColorChanging(true);
 
-        const response = await fetch("/api/color", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(eventSendableColor),
-        });
+        try {
+            // トグル機能: 同じ色をクリックした場合はnullを送信
+            const colorToSend = selectedColor === color ? null : color;
 
-        if (response.ok) {
-            const data = await response.json();
-            setSelectedColor(data.selectedColor);
+            const eventSendableColor: EventSendableColor = {
+                uuid: eventUuid,
+                color: colorToSend,
+            };
+
+            // 最小表示時間（300ms）を設定してチラつきを防ぐ
+            const [response] = await Promise.all([
+                fetch("/api/color", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(eventSendableColor),
+                }),
+                new Promise((resolve) => setTimeout(resolve, 300)),
+            ]);
+
+            if (response.ok) {
+                const data = await response.json();
+                setSelectedColor(data.selectedColor);
+            } else {
+                console.error("色の変更に失敗しました");
+            }
+        } catch (error) {
+            console.error("色の変更中にエラーが発生しました:", error);
+        } finally {
+            setIsColorChanging(false);
         }
     };
 
@@ -92,10 +111,14 @@ export default function EventDetailPage() {
     }
 
     return (
-        <EventDetailSection
-            event={eventDetail!}
-            onClickColor={onClickColor}
-            selectedColor={selectedColor}
-        />
+        <>
+            {isColorChanging && <LoadingDialog message="色を変更中..." />}
+            <EventDetailSection
+                event={eventDetail!}
+                onClickColor={onClickColor}
+                selectedColor={selectedColor}
+                isColorChanging={isColorChanging}
+            />
+        </>
     );
 }

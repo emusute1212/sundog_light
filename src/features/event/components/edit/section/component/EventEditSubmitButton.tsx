@@ -105,7 +105,7 @@ export default function EventEditSubmitButton({
                     )}
                 </>
             )}
-            {loading && <LoadingDialog />}
+            {loading && <LoadingDialog message="保存中..." />}
         </div>
     );
 }
