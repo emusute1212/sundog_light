@@ -15,7 +15,7 @@ export async function GET() {
         let result: EventDetail[];
 
         try {
-            result = await redis.lrange(userEventsKey, 0, -1);
+            result = await redis.lrange<EventDetail>(userEventsKey, 0, -1);
         } catch (error) {
             console.error("データ取得に失敗:", error);
             return Response.json(

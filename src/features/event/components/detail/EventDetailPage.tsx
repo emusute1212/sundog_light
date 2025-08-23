@@ -14,6 +14,7 @@ export default function EventDetailPage() {
     const [eventDetail, setEventDetail] = useState<EventDetail>();
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<CoreError | null>(null);
+    const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
     useEffect(() => {
         const callApi = async () => {
@@ -32,9 +33,23 @@ export default function EventDetailPage() {
                     });
                 } else {
                     setError(null);
-                    setEventDetail(
-                        JSON.parse(await response.json()).result as EventDetail
-                    );
+                    const data = JSON.parse(await response.json())
+                        .result as EventDetail;
+                    setEventDetail(data);
+
+                    // イベント詳細から最後に選択された色を取得
+                    if (data.lastSelectedColor !== undefined) {
+                        setSelectedColor(data.lastSelectedColor);
+                    } else {
+                        // または専用APIから取得
+                        const colorResponse = await fetch(
+                            `/api/event/${eventUuid}/color`
+                        );
+                        if (colorResponse.ok) {
+                            const colorData = await colorResponse.json();
+                            setSelectedColor(colorData.color);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("イベント一覧の取得に失敗しました:", error);
@@ -44,18 +59,28 @@ export default function EventDetailPage() {
         };
         callApi();
     }, [eventUuid]);
+
     const onClickColor = async (color: string) => {
+        // トグル機能: 同じ色をクリックした場合はnullを送信
+        const colorToSend = selectedColor === color ? null : color;
+
         const eventSendableColor: EventSendableColor = {
             uuid: eventUuid,
-            color: color,
+            color: colorToSend,
         };
-        await fetch("/api/color", {
+
+        const response = await fetch("/api/color", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(eventSendableColor),
         });
+
+        if (response.ok) {
+            const data = await response.json();
+            setSelectedColor(data.selectedColor);
+        }
     };
 
     if (isLoading) {
@@ -67,6 +92,10 @@ export default function EventDetailPage() {
     }
 
     return (
-        <EventDetailSection event={eventDetail!} onClickColor={onClickColor} />
+        <EventDetailSection
+            event={eventDetail!}
+            onClickColor={onClickColor}
+            selectedColor={selectedColor}
+        />
     );
 }
