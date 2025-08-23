@@ -7,10 +7,12 @@ export default function EventDetailSection({
     event,
     onClickColor,
     selectedColor,
+    isColorChanging = false,
 }: {
     event: EventDetail;
     onClickColor: (color: string) => void;
     selectedColor: string | null;
+    isColorChanging?: boolean;
 }) {
     const router = useRouter();
     const onClickEditButton = () => {
@@ -49,6 +51,7 @@ export default function EventDetailSection({
                 colors={event.colors}
                 onClickColor={onClickColor}
                 selectedColor={selectedColor}
+                isDisabled={isColorChanging}
             />
             <span className={`text-center mt-4`}>{clientUrl}</span>
             <div className="w-full flex justify-center">

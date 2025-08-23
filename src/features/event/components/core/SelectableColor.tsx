@@ -2,30 +2,41 @@ export default function SelectableColor({
     color,
     onClickColor,
     isSelected = false,
+    isDisabled = false,
 }: {
     color: string;
     onClickColor: (color: string) => void;
     isSelected?: boolean;
+    isDisabled?: boolean;
 }) {
     return (
         <div
             className={`
                 p-2 rounded-lg shadow-md aspect-square w-24 
-                transition-all cursor-pointer group relative
+                transition-all group relative
                 ${
-                    isSelected
+                    isDisabled
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
+                }
+                ${
+                    isSelected && !isDisabled
                         ? "ring-4 ring-blue-500 scale-110"
-                        : "hover:scale-105"
+                        : !isDisabled
+                        ? "hover:scale-105"
+                        : ""
                 }
             `}
             onClick={() => {
-                onClickColor(color);
+                if (!isDisabled) {
+                    onClickColor(color);
+                }
             }}
         >
             <div
                 className={`
                     rounded-lg w-full h-full transition-opacity
-                    ${isSelected ? "" : "group-hover:opacity-80"}
+                    ${isSelected || isDisabled ? "" : "group-hover:opacity-80"}
                 `}
                 style={{ backgroundColor: `${color}` }}
             />
