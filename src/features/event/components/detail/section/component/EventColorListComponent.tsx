@@ -4,10 +4,12 @@ export default function EventColorListComponent({
     colors,
     onClickColor,
     selectedColor,
+    isDisabled = false,
 }: {
     colors: string[];
     onClickColor: (color: string) => void;
     selectedColor?: string | null;
+    isDisabled?: boolean;
 }) {
     return (
         <div className={`flex flex-wrap gap-4 justify-center`}>
@@ -18,6 +20,7 @@ export default function EventColorListComponent({
                         color={color}
                         onClickColor={onClickColor}
                         isSelected={selectedColor === color}
+                        isDisabled={isDisabled}
                     />
                 );
             })}
