@@ -60,6 +60,34 @@ export default async function HostLoginPage({
                         </button>
                     </form>
                 ))}
+
+                <div className="mt-6 text-center">
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                        ログインすることで、
+                        <a
+                            href="/terms.html"
+                            target="_blank"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                            利用規約
+                        </a>
+                        および
+                        <a
+                            href="/privacy.html"
+                            target="_blank"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                            プライバシーポリシー
+                        </a>
+                        に同意したものとみなします。
+                    </p>
+                </div>
+
+                <div className="mt-4 text-center">
+                    <p className="text-xs text-gray-400">
+                        当サービスは無料でご利用いただけます
+                    </p>
+                </div>
             </div>
         </div>
     );

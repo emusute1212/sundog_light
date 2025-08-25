@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プライバシーポリシー - SUNDOG Light</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #374151;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        h3 {
+            color: #4b5563;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .effective-date {
+            background-color: #f3f4f6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .contact-info {
+            background-color: #eff6ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #d1d5db;
+            padding: 10px;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #f9fafb;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>SUNDOG Light プライバシーポリシー</h1>
+    
+    <div class="effective-date">
+        <strong>施行日：</strong>2025年1月17日
+    </div>
+    
+    <h2>1. 基本方針</h2>
+    <p>SUNDOG Light（以下「当サービス」）の運営者（以下「当社」）は、利用者の個人情報保護の重要性を認識し、個人情報の保護に関する法律（個人情報保護法）を遵守し、利用者の個人情報を適切に取り扱います。</p>
+    
+    <h2>2. 収集する情報</h2>
+    <h3>2.1 Google認証により取得する情報</h3>
+    <table class="data-table">
+        <tr>
+            <th>取得情報</th>
+            <th>利用目的</th>
+            <th>必須/任意</th>
+        </tr>
+        <tr>
+            <td>ユーザーID（Google Provider Account ID）</td>
+            <td>アカウント識別・認証・データ管理</td>
+            <td>必須</td>
+        </tr>
+    </table>
+    
+    <h3>2.2 サービス利用により取得する情報</h3>
+    <table class="data-table">
+        <tr>
+            <th>取得情報</th>
+            <th>利用目的</th>
+        </tr>
+        <tr>
+            <td>イベント情報（イベント名、色パレット、UUID）</td>
+            <td>サービス機能の提供</td>
+        </tr>
+        <tr>
+            <td>色制御履歴（最後に選択された色）</td>
+            <td>リアルタイム色制御機能の提供</td>
+        </tr>
+
+    </table>
+    
+    <h2>3. 情報の利用目的</h2>
+    <p>収集した個人情報は、以下の目的で利用します：</p>
+    <ul>
+        <li>当サービスの提供・運営・維持</li>
+        <li>ユーザー認証・本人確認</li>
+        <li>ユーザーサポート・お問い合わせ対応</li>
+        <li>サービスの改善・新機能開発</li>
+        <li>システムの安定性確保・セキュリティ対策</li>
+        <li>法令に基づく対応</li>
+    </ul>
+    
+    <h2>4. 情報の第三者提供</h2>
+    <p>当社は、以下の場合を除き、個人情報を第三者に提供することはありません：</p>
+    <ul>
+        <li>利用者の事前の同意がある場合</li>
+        <li>法令に基づく場合</li>
+        <li>人の生命、身体または財産の保護のために必要がある場合であって、本人の同意を得ることが困難である場合</li>
+        <li>公衆衛生の向上または児童の健全な育成の推進のために特に必要がある場合であって、本人の同意を得ることが困難である場合</li>
+    </ul>
+    
+    <h2>5. 第三者サービスの利用</h2>
+    <h3>5.1 Google OAuth 2.0</h3>
+    <p>当サービスは、ユーザー認証にGoogle OAuth 2.0を使用しています。Googleのプライバシーポリシーについては、<a href="https://policies.google.com/privacy" target="_blank">Googleプライバシーポリシー</a>をご確認ください。</p>
+    
+    <h3>5.2 Pusher（リアルタイム通信）</h3>
+    <p>当サービスは、リアルタイム色制御機能の提供にPusherを使用しています。Pusherのプライバシーポリシーについては、<a href="https://pusher.com/legal" target="_blank">Pusher Privacy Policy</a>をご確認ください。</p>
+    
+    <h3>5.3 Vercel（ホスティング）</h3>
+    <p>当サービスは、Vercelでホスティングされています。Vercelのプライバシーポリシーについては、<a href="https://vercel.com/legal/privacy-policy" target="_blank">Vercel Privacy Policy</a>をご確認ください。</p>
+    
+    <h2>6. データの保存・管理</h2>
+    <h3>6.1 データの保存場所</h3>
+    <p>利用者の個人情報は、MongoDB Atlasクラウドサービスに保存されます。データは適切なセキュリティ措置の下で管理されています。</p>
+    
+    <h3>6.2 データの保存期間</h3>
+    <p>収集した個人情報は、サービス提供に必要な期間保存し、不要になった時点で適切に削除いたします。</p>
+    
+    <h2>7. セキュリティ</h2>
+    <p>当社は、個人情報の紛失、破壊、改ざん、漏洩等を防止するため、以下のセキュリティ対策を実施しています：</p>
+    <ul>
+        <li>HTTPS通信によるデータの暗号化</li>
+        <li>データベースアクセスの制限・監視</li>
+        <li>定期的なセキュリティアップデート</li>
+
+    </ul>
+    
+    <h2>8. Cookieについて</h2>
+    <h3>8.1 必須Cookie</h3>
+    <p>当サービスは、サービス提供に必要な以下のCookieを使用します：</p>
+    <ul>
+        <li>認証情報（セッション管理）</li>
+        <li>CSRF保護トークン</li>
+    </ul>
+    
+    <h3>8.2 分析Cookie</h3>
+    <p>当サービスでは、サービス改善のために匿名化された利用状況を分析する場合があります。詳細な分析ツールを導入する際は、事前に通知いたします。</p>
+    
+    <h2>9. 利用者の権利</h2>
+    <p>利用者は、自身の個人情報について以下の権利を有します：</p>
+    <ul>
+        <li><strong>開示請求：</strong>保有する個人情報の開示を求める権利</li>
+        <li><strong>訂正・削除：</strong>個人情報の訂正・削除を求める権利</li>
+        <li><strong>利用停止：</strong>個人情報の利用停止を求める権利</li>
+        <li><strong>データ削除：</strong>保存されているデータの完全削除を求める権利</li>
+    </ul>
+    
+    <h3>9.1 データ削除</h3>
+    <p>当サービス内のデータ削除をご希望の場合は、お問い合わせよりご連絡ください。可能な範囲で対応いたします。</p>
+    <p>なお、Googleアカウントとの連携解除は、Google側で行うことができます。</p>
+    
+    <h2>10. 海外へのデータ移転</h2>
+    <p>当サービスで利用している第三者サービス（Google、Pusher、Vercel、MongoDB Atlas等）により、個人情報が海外に移転される可能性があります。これらのサービスは適切なデータ保護措置を講じています。</p>
+    
+    <h2>11. プライバシーポリシーの変更</h2>
+    <p>当社は、法令の変更やサービスの改善に伴い、本プライバシーポリシーを変更することがあります。重要な変更については、サービス内での通知またはメールで利用者に連絡いたします。</p>
+    
+    <h2>12. Google APIの利用について</h2>
+    <p>当サービスのGoogle OAuth 2.0の利用は、<a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank">Google API Services User Data Policy</a>に準拠しています。</p>
+    
+    <div class="contact-info">
+        <h2>お問い合わせ</h2>
+        <p>個人情報の取り扱いに関するお問い合わせは、以下までご連絡ください：</p>
+        <p><strong>SUNDOG Light 運営事務局</strong><br>
+        個人情報保護責任者：運営責任者<br>
+        メール：yosuke.miyanishi@gmail.com</p>
+        
+        <h3>開示請求等の手続き</h3>
+        <p>個人情報の開示、訂正、削除等をご希望の場合は、本人確認を行った上で対応いたします。手続きの詳細については、お問い合わせください。</p>
+    </div>
+    
+    <hr style="margin: 30px 0;">
+    <p style="text-align: center; color: #6b7280; font-size: 14px;">
+        最終更新：2025年1月17日<br>
+        © 2025 SUNDOG Light. All rights reserved.
+    </p>
+</body>
+</html>

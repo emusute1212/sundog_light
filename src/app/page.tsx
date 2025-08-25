@@ -180,7 +180,22 @@ export default function LandingPage() {
 
             {/* Footer */}
             <footer className="py-10 text-center text-sm text-gray-500 bg-white">
-                © 2025 SUNDOG Light. All rights reserved.
+                <div className="mb-4">
+                    <Link
+                        href="/terms.html"
+                        className="text-gray-500 hover:text-gray-700 mx-2 underline"
+                    >
+                        利用規約
+                    </Link>
+                    <span className="mx-2">|</span>
+                    <Link
+                        href="/privacy.html"
+                        className="text-gray-500 hover:text-gray-700 mx-2 underline"
+                    >
+                        プライバシーポリシー
+                    </Link>
+                </div>
+                <div>© 2025 SUNDOG Light. All rights reserved.</div>
             </footer>
         </main>
     );
