@@ -15,6 +15,7 @@ export default async function RootLayout({
             <header className={`w-full pb-4 sticky top-0 bg-white`}>
                 <SundogLightHeader
                     isShowLogoutButton={session != null}
+                    headerClickPath={session != null ? "/event/list" : "/"}
                     onClickLogoutButton={async () => {
                         "use server";
                         await signOut({
