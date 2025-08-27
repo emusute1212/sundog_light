@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { pusherClient } from "@/libs/pusher/client";
 import { EventObservableColor } from "@/features/event/types/event-observable-color";
 import { useParams } from "next/navigation";
+import { event as gtagEvent } from "@/libs/gtag";
 
 export default function Client() {
     const params = useParams();
@@ -17,6 +18,13 @@ export default function Client() {
                 if (response.ok) {
                     const data = await response.json();
                     setBackgroundColor(data.color);
+
+                    // GAイベント送信：クライアント接続
+                    gtagEvent({
+                        action: "client_connect",
+                        category: "client_engagement",
+                        label: params.key as string,
+                    });
                 }
             } catch (error) {
                 console.error("Failed to fetch current color:", error);
@@ -32,6 +40,13 @@ export default function Client() {
             .subscribe(`selected-color-channel-${params.key}`)
             .bind("evt::color", (data: EventObservableColor) => {
                 setBackgroundColor(() => data.color);
+
+                // GAイベント送信：色変更受信
+                gtagEvent({
+                    action: "color_received",
+                    category: "client_engagement",
+                    label: params.key as string,
+                });
             });
 
         return () => {
