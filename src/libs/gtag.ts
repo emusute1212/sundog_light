@@ -23,10 +23,29 @@ type EventAction = {
 
 export const event = ({ action, category, label, value }: EventAction) => {
     if (isGAEnabled && GA_MEASUREMENT_ID) {
+        // デバッグ用ログ
+        console.log("📊 GA Event:", {
+            action,
+            category,
+            label,
+            value,
+            measurement_id: GA_MEASUREMENT_ID,
+        });
+
         window.gtag("event", action, {
             event_category: category,
             event_label: label,
             value: value,
+        });
+    } else {
+        // GA無効時のログ
+        console.log("⚠️ GA Event (not sent - GA disabled):", {
+            action,
+            category,
+            label,
+            value,
+            isGAEnabled,
+            measurement_id: GA_MEASUREMENT_ID,
         });
     }
 };
