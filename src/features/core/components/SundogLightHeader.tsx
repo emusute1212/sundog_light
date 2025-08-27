@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 export default function SundogLightHeader({
     isShowLogoutButton,
     onClickLogoutButton,
+    headerClickPath = "/event/list",
 }: {
     isShowLogoutButton: boolean;
     onClickLogoutButton: () => void;
+    headerClickPath?: string;
 }) {
     const router = useRouter();
     return (
@@ -18,7 +20,7 @@ export default function SundogLightHeader({
             {/* タイトル */}
             <div
                 onClick={() => {
-                    router.push("/event/list");
+                    router.push(headerClickPath);
                 }}
                 className="relative select-none cursor-pointer"
             >
