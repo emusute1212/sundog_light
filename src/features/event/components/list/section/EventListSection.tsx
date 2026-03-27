@@ -1,4 +1,4 @@
-import { EventDetail } from "@/features/event/types/event-detail";
+import { EventSummary } from "@/features/event/types/event-summary";
 import EventItemComponent from "@/features/event/components/list/section/component/EventItemComponent";
 import EventAddComponent from "@/features/event/components/list/section/component/EventAddComponent";
 import EventListSkeleton from "./component/EventListSkeleton";
@@ -8,7 +8,7 @@ export default function EventListSection({
     events,
 }: {
     isLoading: boolean;
-    events: EventDetail[];
+    events: EventSummary[];
 }) {
     return (
         <section className={`grid grid-rows-none px-8`}>
@@ -20,7 +20,7 @@ export default function EventListSection({
                 </>
             ) : (
                 <>
-                    {events.map((event: EventDetail) => (
+                    {events.map((event: EventSummary) => (
                         <EventItemComponent key={event.uuid} event={event} />
                     ))}
                     <EventAddComponent />

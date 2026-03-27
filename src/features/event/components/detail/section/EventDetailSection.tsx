@@ -1,3 +1,4 @@
+import { buildClientPageUrl } from "@/features/event/api/event-client";
 import { EventDetail } from "@/features/event/types/event-detail";
 import EventColorListComponent from "@/features/event/components/detail/section/component/EventColorListComponent";
 import { useRouter } from "next/navigation";
@@ -18,7 +19,7 @@ export default function EventDetailSection({
     const onClickEditButton = () => {
         router.push(`/event/edit/${event.uuid}`);
     };
-    const clientUrl = `${window.location.origin}/client/${event.uuid}`;
+    const clientUrl = buildClientPageUrl(event.uuid, event.clientPageUrl);
     return (
         <section className={`flex-1 flex flex-col px-8`}>
             <span className={`text-2xl font-bold w-full text-center mb-2`}>

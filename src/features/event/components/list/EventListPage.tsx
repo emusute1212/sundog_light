@@ -1,44 +1,30 @@
 "use client";
+import { fetchEventList } from "@/features/event/api/event-client";
+import { EventSummary } from "@/features/event/types/event-summary";
 import { useEffect, useState } from "react";
-import { EventDetail } from "@/features/event/types/event-detail";
 import EventListSection from "@/features/event/components/list/section/EventListSection";
 import { CoreError } from "../../types/core-error";
 import CoreErrorComponent from "../core/CoreErrorComponent";
+import { toCoreError } from "../../lib/to-core-error";
 
 export default function EventListPage() {
-    const [eventList, setEventList] = useState<EventDetail[]>([]);
+    const [eventList, setEventList] = useState<EventSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<CoreError | null>(null);
 
     useEffect(() => {
         const callApi = async () => {
             try {
-                const response = await fetch("/api/event/list", {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                if (!response.ok) {
-                    setError({
-                        errorCode: response.status,
-                        errorMessage: response.statusText,
-                    });
-                } else {
-                    setError(null);
-                    setEventList(
-                        JSON.parse(await response.json())
-                            .result as EventDetail[]
-                    );
-                }
+                setEventList(await fetchEventList());
+                setError(null);
             } catch (error) {
-                console.error("イベント一覧の取得に失敗しました:", error);
+                setError(toCoreError(error));
             } finally {
                 setIsLoading(false);
             }
         };
-        callApi();
+
+        void callApi();
     }, []);
 
     if (error) {

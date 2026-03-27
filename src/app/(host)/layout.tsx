@@ -1,32 +1,15 @@
-import { auth, signOut } from "@/auth";
-import SundogLightHeader from "@/features/core/components/SundogLightHeader";
+import { AuthProvider } from "@/features/auth/components/AuthProvider";
+import HostShell from "@/features/auth/components/HostShell";
 import React from "react";
-import { Toaster } from "react-hot-toast";
 
 export default async function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const session = await auth();
-
     return (
-        <div className={`flex flex-col h-screen items-center`}>
-            <header className={`w-full pb-4 sticky top-0 bg-white`}>
-                <SundogLightHeader
-                    isShowLogoutButton={session != null}
-                    headerClickPath={session != null ? "/event/list" : "/"}
-                    onClickLogoutButton={async () => {
-                        "use server";
-                        await signOut({
-                            redirectTo: "/event/list",
-                            redirect: true,
-                        });
-                    }}
-                />
-            </header>
-            <main className={`w-full flex-grow max-w-lg`}>{children}</main>
-            <Toaster position="top-center" />
-        </div>
+        <AuthProvider>
+            <HostShell>{children}</HostShell>
+        </AuthProvider>
     );
 }

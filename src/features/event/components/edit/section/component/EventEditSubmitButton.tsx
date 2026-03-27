@@ -1,5 +1,11 @@
+import {
+    createEvent,
+    deleteEvent,
+    updateEvent,
+} from "@/features/event/api/event-client";
 import { EventCreateRequest } from "@/features/event/types/event-create-request";
 import { EventUpdateRequest } from "@/features/event/types/event-update-request";
+import { getDisplayErrorMessage } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import EventDeleteConfirmDialog from "./EventDeleteConfirmDialog";
@@ -22,26 +28,14 @@ export default function EventEditSubmitButton({
         if (!isValid) return;
         setLoading(true);
         try {
-            const response = await fetch(
-                isEdit ? "/api/event/update" : "/api/event/create",
-                {
-                    method: isEdit ? "PUT" : "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(request),
-                }
-            );
-            if (!response.ok) {
-                toast.error(
-                    `エラーが発生しました！\nエラーコード：${response.status}\n${response.statusText}`
-                );
+            if (isEdit) {
+                await updateEvent(request as EventUpdateRequest);
             } else {
-                router.push(`/event/list`);
+                await createEvent(request as EventCreateRequest);
             }
+            router.push(`/event/list`);
         } catch (error) {
-            console.error("イベント一覧の取得に失敗しました:", error);
-            toast.error(`エラーが発生しました！`);
+            toast.error(getDisplayErrorMessage(error));
         } finally {
             setLoading(false);
         }
@@ -50,27 +44,12 @@ export default function EventEditSubmitButton({
         if (isEdit) {
             setLoading(true);
             try {
-                const response = await fetch(
-                    `/api/event/remove/${
-                        (request as EventUpdateRequest).eventDetail.uuid
-                    }`,
-                    {
-                        method: "DELETE",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    }
+                await deleteEvent(
+                    (request as EventUpdateRequest).eventDetail.uuid
                 );
-                if (!response.ok) {
-                    toast.error(
-                        `エラーが発生しました！\nエラーコード：${response.status}\n${response.statusText}`
-                    );
-                } else {
-                    router.push(`/event/list`);
-                }
+                router.push(`/event/list`);
             } catch (error) {
-                console.error("イベント一覧の取得に失敗しました:", error);
-                toast.error(`エラーが発生しました！`);
+                toast.error(getDisplayErrorMessage(error));
             } finally {
                 setLoading(false);
             }

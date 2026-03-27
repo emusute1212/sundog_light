@@ -1,8 +1,8 @@
-import {EventDetail} from "@/features/event/types/event-detail";
-import {ChevronRight, Info} from "lucide-react";
+import { EventSummary } from "@/features/event/types/event-summary";
+import { ChevronRight, Info } from "lucide-react";
 import Link from "next/link";
 
-export default function EventItemComponent({event}: { event: EventDetail }) {
+export default function EventItemComponent({ event }: { event: EventSummary }) {
     return (
         <Link
             className={`
@@ -22,9 +22,9 @@ export default function EventItemComponent({event}: { event: EventDetail }) {
                 pathname: `/event/detail/${event.uuid}`,
             }}
         >
-            <Info color="black" size={24}/>
+            <Info color="black" size={24} />
             <span className={`w-full`}>{event.name}</span>
-            <ChevronRight color="black" size={24}/>
+            <ChevronRight color="black" size={24} />
         </Link>
     );
 }
