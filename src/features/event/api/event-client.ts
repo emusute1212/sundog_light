@@ -2,7 +2,6 @@ import { getBackendOrigin, apiRequest } from "@/lib/api-client";
 import { hexColorToInt, intColorToHex } from "@/lib/color";
 import { EventCreateRequest } from "../types/event-create-request";
 import { EventDetail } from "../types/event-detail";
-import { EventSendableColor } from "../types/event-sendable-color";
 import { EventSummary } from "../types/event-summary";
 import { EventUpdateRequest } from "../types/event-update-request";
 
@@ -23,9 +22,9 @@ type EventCreateResponse = {
     eventId?: string;
 };
 
-type EventColorResponse = {
-    color?: number | string | null;
-    selectedColor?: number | string | null;
+type PublicCurrentColorResponse = {
+    eventId?: string;
+    currentColor?: number | null;
 };
 
 function requireString(value: string | undefined, fieldName: string) {
@@ -58,22 +57,14 @@ function mapDetail(response: EventGetDetailResponse): EventDetail {
     };
 }
 
-function mapColorResponse(color: number | string | null | undefined) {
-    if (color == null) {
-        return null;
-    }
-
-    if (typeof color === "number") {
-        return intColorToHex(color);
-    }
-
-    return color;
-}
-
 export function buildClientPageUrl(
     eventId: string,
     clientPageUrl?: string
 ) {
+    if (typeof window !== "undefined") {
+        return `${window.location.origin}/client/${eventId}`;
+    }
+
     return clientPageUrl ?? `${getBackendOrigin()}/client/${eventId}`;
 }
 
@@ -91,6 +82,15 @@ export async function fetchEventDetail(eventId: string) {
     });
 
     return mapDetail(response);
+}
+
+export async function fetchPublicCurrentColor(eventId: string) {
+    const response = await apiRequest<PublicCurrentColorResponse>({
+        path: `/api/public/events/${eventId}/current-color`,
+        requiresAuth: false,
+    });
+
+    return intColorToHex(response.currentColor);
 }
 
 export async function createEvent(request: EventCreateRequest) {
@@ -126,16 +126,4 @@ export async function deleteEvent(eventId: string) {
             eventId,
         },
     });
-}
-
-export async function selectEventColor(request: EventSendableColor) {
-    // This endpoint exists in the current backend contract, but is not yet
-    // described in the shared OpenAPI schema.
-    const response = await apiRequest<EventColorResponse>({
-        path: "/api/color",
-        method: "POST",
-        body: request,
-    });
-
-    return mapColorResponse(response.selectedColor ?? response.color);
 }

@@ -1,0 +1,144 @@
+import { hexColorToInt, intColorToHex } from "@/lib/color";
+
+type SockJsConstructor = new (url: string) => unknown;
+
+type StompMessage = {
+    body: string;
+};
+
+type StompSubscription = {
+    unsubscribe: () => void;
+};
+
+type StompClient = {
+    connected?: boolean;
+    debug?: (message: string) => void;
+    connect: (
+        headers: Record<string, string>,
+        onConnect: (frame: string) => void,
+        onError: (error: unknown) => void
+    ) => void;
+    disconnect: (onDisconnect?: () => void) => void;
+    subscribe: (
+        destination: string,
+        onMessage: (message: StompMessage) => void
+    ) => StompSubscription;
+    send: (
+        destination: string,
+        headers?: Record<string, string>,
+        body?: string
+    ) => void;
+};
+
+type StompFactory = {
+    over: (socket: unknown) => StompClient;
+};
+
+declare global {
+    interface Window {
+        SockJS?: SockJsConstructor;
+        Stomp?: StompFactory;
+    }
+}
+
+type ColorTopicMessage = {
+    color?: number | null;
+    currentColor?: number | null;
+    selectedColor?: number | null;
+};
+
+type ConnectColorSocketOptions = {
+    eventId: string;
+    onConnected: () => void;
+    onColorChanged: (color: string | null) => void;
+    onError: (message: string) => void;
+};
+
+export type ColorSocketConnection = {
+    disconnect: () => void;
+    sendColor: (color: string) => void;
+};
+
+function resolveColor(message: ColorTopicMessage) {
+    return intColorToHex(
+        message.selectedColor ?? message.currentColor ?? message.color
+    );
+}
+
+export function hasColorSocketLibraries() {
+    return typeof window !== "undefined" && !!window.SockJS && !!window.Stomp;
+}
+
+function getSocketLibraries() {
+    if (!hasColorSocketLibraries()) {
+        throw new Error("WebSocket libraries are not loaded.");
+    }
+
+    return {
+        SockJS: window.SockJS as SockJsConstructor,
+        Stomp: window.Stomp as StompFactory,
+    };
+}
+
+export function connectColorSocket({
+    eventId,
+    onConnected,
+    onColorChanged,
+    onError,
+}: ConnectColorSocketOptions): ColorSocketConnection {
+    const { SockJS, Stomp } = getSocketLibraries();
+    const socket = new SockJS("/ws");
+    const client = Stomp.over(socket);
+    let subscription: StompSubscription | null = null;
+
+    client.debug = () => undefined;
+
+    client.connect(
+        {},
+        () => {
+            subscription = client.subscribe(
+                `/topic/event/${eventId}`,
+                (message) => {
+                    try {
+                        const payload = JSON.parse(
+                            message.body
+                        ) as ColorTopicMessage;
+                        onColorChanged(resolveColor(payload));
+                    } catch {
+                        onError("色更新メッセージの解析に失敗しました。");
+                    }
+                }
+            );
+
+            onConnected();
+        },
+        (error) => {
+            onError(
+                error instanceof Error
+                    ? error.message
+                    : "色変更用 WebSocket の接続に失敗しました。"
+            );
+        }
+    );
+
+    return {
+        disconnect: () => {
+            subscription?.unsubscribe();
+            subscription = null;
+
+            if (client.connected) {
+                client.disconnect(() => undefined);
+            }
+        },
+        sendColor: (color: string) => {
+            client.send(
+                `/app/event/${eventId}/color`,
+                {},
+                JSON.stringify({
+                    eventId,
+                    color: hexColorToInt(color),
+                })
+            );
+        },
+    };
+}

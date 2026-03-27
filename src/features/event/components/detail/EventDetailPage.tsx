@@ -1,8 +1,14 @@
 "use client";
-import { fetchEventDetail, selectEventColor } from "@/features/event/api/event-client";
+import { fetchEventDetail } from "@/features/event/api/event-client";
 import EventDetailSection from "@/features/event/components/detail/section/EventDetailSection";
+import {
+    connectColorSocket,
+    ColorSocketConnection,
+    hasColorSocketLibraries,
+} from "@/features/event/lib/color-websocket";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import Script from "next/script";
+import { useEffect, useRef, useState } from "react";
 import { EventDetail } from "@/features/event/types/event-detail";
 import { EventSendableColor } from "@/features/event/types/event-sendable-color";
 import { CoreError } from "../../types/core-error";
@@ -20,6 +26,13 @@ export default function EventDetailPage() {
     const [error, setError] = useState<CoreError | null>(null);
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
     const [isColorChanging, setIsColorChanging] = useState(false);
+    const [loadedSocketScriptCount, setLoadedSocketScriptCount] = useState(() =>
+        hasColorSocketLibraries() ? 2 : 0
+    );
+    const [isSocketConnected, setIsSocketConnected] = useState(false);
+    const socketConnectionRef = useRef<ColorSocketConnection | null>(null);
+    const colorChangeTimeoutRef = useRef<number | null>(null);
+    const isSocketReady = loadedSocketScriptCount >= 2;
 
     useEffect(() => {
         const callApi = async () => {
@@ -38,32 +51,88 @@ export default function EventDetailPage() {
         void callApi();
     }, [eventUuid]);
 
+    useEffect(() => {
+        if (hasColorSocketLibraries()) {
+            setLoadedSocketScriptCount(2);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isSocketReady) {
+            return;
+        }
+
+        try {
+            const connection = connectColorSocket({
+                eventId: eventUuid,
+                onConnected: () => {
+                    setIsSocketConnected(true);
+                },
+                onColorChanged: (color) => {
+                    if (colorChangeTimeoutRef.current != null) {
+                        window.clearTimeout(colorChangeTimeoutRef.current);
+                        colorChangeTimeoutRef.current = null;
+                    }
+
+                    setSelectedColor(color);
+                    setIsColorChanging(false);
+                },
+                onError: (message) => {
+                    if (colorChangeTimeoutRef.current != null) {
+                        window.clearTimeout(colorChangeTimeoutRef.current);
+                        colorChangeTimeoutRef.current = null;
+                    }
+
+                    setIsSocketConnected(false);
+                    setIsColorChanging(false);
+                    toast.error(message);
+                },
+            });
+
+            socketConnectionRef.current = connection;
+
+            return () => {
+                if (colorChangeTimeoutRef.current != null) {
+                    window.clearTimeout(colorChangeTimeoutRef.current);
+                    colorChangeTimeoutRef.current = null;
+                }
+
+                setIsSocketConnected(false);
+                socketConnectionRef.current?.disconnect();
+                socketConnectionRef.current = null;
+            };
+        } catch (error) {
+            toast.error("色変更用 WebSocket の初期化に失敗しました。");
+            return;
+        }
+    }, [eventUuid, isSocketReady]);
+
     const onClickColor = async (color: string) => {
-        // 処理中は追加のクリックを防ぐ
         if (isColorChanging) return;
+        if (!socketConnectionRef.current || !isSocketConnected) {
+            toast.error("色変更用の接続を確立中です。");
+            return;
+        }
 
         setIsColorChanging(true);
 
         try {
-            // トグル機能: 同じ色をクリックした場合はnullを送信
-            const colorToSend = selectedColor === color ? null : color;
-
             const eventSendableColor: EventSendableColor = {
-                uuid: eventUuid,
-                color: colorToSend,
+                eventId: eventUuid,
+                color,
             };
 
-            // 最小表示時間（300ms）を設定してチラつきを防ぐ
-            const [response] = await Promise.all([
-                selectEventColor(eventSendableColor),
-                new Promise((resolve) => setTimeout(resolve, 300)),
-            ]);
+            socketConnectionRef.current.sendColor(eventSendableColor.color);
 
-            setSelectedColor(response);
+            colorChangeTimeoutRef.current = window.setTimeout(() => {
+                setIsColorChanging(false);
+                toast.error("色変更の応答がありません。");
+            }, 5000);
         } catch (error) {
             toast.error("色の変更に失敗しました。");
-        } finally {
             setIsColorChanging(false);
+        } finally {
+            // WebSocket の応答を待つため、ここでは loading を解除しない
         }
     };
 
@@ -77,6 +146,24 @@ export default function EventDetailPage() {
 
     return (
         <>
+            <Script
+                src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"
+                strategy="afterInteractive"
+                onLoad={() =>
+                    setLoadedSocketScriptCount((current) =>
+                        Math.min(current + 1, 2)
+                    )
+                }
+            />
+            <Script
+                src="https://cdn.jsdelivr.net/npm/stompjs@2/lib/stomp.min.js"
+                strategy="afterInteractive"
+                onLoad={() =>
+                    setLoadedSocketScriptCount((current) =>
+                        Math.min(current + 1, 2)
+                    )
+                }
+            />
             {isColorChanging && <LoadingDialog message="色を変更中..." />}
             <EventDetailSection
                 event={eventDetail!}
