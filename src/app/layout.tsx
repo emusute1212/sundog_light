@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import React from "react";
 import GoogleAnalytics from "@/features/core/components/GoogleAnalytics";
+import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -36,12 +37,12 @@ export const metadata: Metadata = {
         address: false,
         telephone: false,
     },
-    metadataBase: new URL("https://sundog-light.vercel.app"),
+    metadataBase: new URL(SITE_URL),
     openGraph: {
         title: "SUNDOG Light - スマホをペンライト代わりに！",
         description:
             "アプリ不要でスマホがペンライトの代わりになります！結婚式や学園祭イベントなど中小イベントでも使いやすく誰でも無料で使えます。",
-        url: "https://sundog-light.vercel.app",
+        url: SITE_URL,
         siteName: "SUNDOG Light",
         images: [
             {
@@ -91,7 +92,7 @@ export default function RootLayout({
         name: "SUNDOG Light",
         description:
             "アプリ不要でスマホがペンライトの代わりになります！結婚式や学園祭イベントなど中小イベントでも使いやすく誰でも無料で使えます。",
-        url: "https://sundog-light.vercel.app",
+        url: SITE_URL,
         applicationCategory: "UtilityApplication",
         operatingSystem: "Web Browser",
         offers: {

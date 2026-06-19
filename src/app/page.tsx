@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
     title: "スマホをペンライト代わりに！「SUNDOG Light」",
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
         `,
     openGraph: {
         type: "website",
-        url: "https://sundog-light.vercel.app",
+        url: SITE_URL,
         title: "スマホをペンライト代わりに！「SUNDOG Light」",
         description: `
 アプリ不要でスマホがペンライトの代わりになります！結婚式や学園祭イベントなど中小イベントでも使いやすく誰でも無料で使えます。

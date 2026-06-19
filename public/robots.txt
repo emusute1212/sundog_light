@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sundog-light.vercel.app/sitemap.xml 
+Sitemap: https://app.sundog-org.com/sitemap.xml
