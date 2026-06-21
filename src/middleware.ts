@@ -1,8 +1,50 @@
 import { auth } from "@/auth";
+import {
+    getMaintenanceMessage,
+    isMaintenanceModeEnabled,
+    MAINTENANCE_RETRY_AFTER_SECONDS,
+} from "@/lib/maintenance";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+function buildMaintenanceHeaders() {
+    return {
+        "Cache-Control": "no-store",
+        "Retry-After": MAINTENANCE_RETRY_AFTER_SECONDS.toString(),
+        "X-Maintenance-Mode": "true",
+    };
+}
+
+function maintenanceResponse(request: NextRequest) {
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+        return NextResponse.json(
+            {
+                error: "メンテナンス中です",
+                message: getMaintenanceMessage(),
+            },
+            {
+                status: 503,
+                headers: buildMaintenanceHeaders(),
+            }
+        );
+    }
+
+    const url = request.nextUrl.clone();
+    url.pathname = "/maintenance";
+    url.search = "";
+
+    const response = NextResponse.redirect(url);
+    for (const [key, value] of Object.entries(buildMaintenanceHeaders())) {
+        response.headers.set(key, value);
+    }
+    return response;
+}
+
 export async function middleware(request: NextRequest) {
+    if (isMaintenanceModeEnabled()) {
+        return maintenanceResponse(request);
+    }
+
     // /api/auth/* へのリクエストは認証チェックをスキップ
     if (request.nextUrl.pathname.startsWith("/api/auth")) {
         return NextResponse.next();
@@ -56,6 +98,7 @@ export const config = {
         "/api/pusher/:path*",
         // クライアントページ
         "/event/:path*",
+        "/client/:path*",
         // ログインページ
         "/login",
     ],
