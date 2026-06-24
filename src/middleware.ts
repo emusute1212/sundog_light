@@ -41,24 +41,31 @@ function maintenanceResponse(request: NextRequest) {
 }
 
 export async function middleware(request: NextRequest) {
+    const pathname = request.nextUrl.pathname;
+
     if (isMaintenanceModeEnabled()) {
         return maintenanceResponse(request);
     }
 
     // /api/auth/* へのリクエストは認証チェックをスキップ
-    if (request.nextUrl.pathname.startsWith("/api/auth")) {
+    if (pathname.startsWith("/api/auth")) {
         return NextResponse.next();
     }
 
     // /api/event/*/color へのリクエストは認証チェックをスキップ（クライアント用）
-    if (request.nextUrl.pathname.match(/^\/api\/event\/[^\/]+\/color$/)) {
+    if (pathname.match(/^\/api\/event\/[^\/]+\/color$/)) {
+        return NextResponse.next();
+    }
+
+    // /client/* は参加者用の公開ページなので通常時は認証チェックをスキップ
+    if (pathname === "/client" || pathname.startsWith("/client/")) {
         return NextResponse.next();
     }
 
     const session = await auth();
 
     // APIリクエスト（サーバー向け）の処理
-    if (request.nextUrl.pathname.startsWith("/api/")) {
+    if (pathname.startsWith("/api/")) {
         if (!session) {
             return new NextResponse(
                 JSON.stringify({ error: "認証が必要です" }),
@@ -75,14 +82,14 @@ export async function middleware(request: NextRequest) {
 
     // クライアント向けページの処理
     // ログインページはスキップ
-    if (request.nextUrl.pathname === "/login") {
+    if (pathname === "/login") {
         return NextResponse.next();
     }
 
     // 未認証の場合はログインページにリダイレクト
     if (!session) {
         const url = new URL("/login", request.url);
-        url.searchParams.set("callbackUrl", request.nextUrl.pathname);
+        url.searchParams.set("callbackUrl", pathname);
         return NextResponse.redirect(url);
     }
 

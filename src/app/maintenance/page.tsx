@@ -1,5 +1,9 @@
-import { getMaintenanceMessage } from "@/lib/maintenance";
+import {
+    getMaintenanceMessage,
+    isMaintenanceModeEnabled,
+} from "@/lib/maintenance";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +17,10 @@ export const metadata: Metadata = {
 };
 
 export default function MaintenancePage() {
+    if (!isMaintenanceModeEnabled()) {
+        redirect("/");
+    }
+
     const message = getMaintenanceMessage();
 
     return (
