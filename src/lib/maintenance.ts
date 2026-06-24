@@ -8,9 +8,26 @@ export function isMaintenanceModeEnabled(): boolean {
     );
 }
 
+export function isMaintenanceNoticeEnabled(): boolean {
+    return TRUE_VALUES.has(
+        (process.env.MAINTENANCE_NOTICE_MODE ?? "").trim().toLowerCase()
+    );
+}
+
+export function isMaintenanceNoticeVisible(): boolean {
+    return isMaintenanceNoticeEnabled() && !isMaintenanceModeEnabled();
+}
+
 export function getMaintenanceMessage(): string {
     return (
         process.env.MAINTENANCE_MESSAGE ??
         "サービス更新作業のため、一時的に停止しています。完了までしばらくお待ちください。"
+    );
+}
+
+export function getMaintenanceNoticeMessage(): string {
+    return (
+        process.env.MAINTENANCE_NOTICE_MESSAGE ??
+        "近日中にメンテナンスを予定しています。作業中はログイン後の操作と参加者画面への接続を一時停止します。"
     );
 }

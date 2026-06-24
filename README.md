@@ -26,6 +26,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - ホスト向け画面と参加者向け画面にはメンテナンス案内を表示します。
 - 更新操作は受け付けず、メンテナンス終了後に通常動作へ戻します。
 
+## Maintenance Notice Mode
+
+予定されたメンテナンスは、対象となるホスト向け画面へ事前に告知します。
+
+メンテナンス予告中の挙動:
+
+- ランディングページと参加者ライト画面には告知バーを表示しません。
+- ホスト向け画面に告知バーを表示します。
+- 実メンテナンス中は、予告よりメンテナンス案内を優先します。
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
