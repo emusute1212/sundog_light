@@ -43,6 +43,28 @@ MAINTENANCE_MESSAGE="サービス更新作業のため、一時的に停止し�
 2. 必要な更新作業を実施する。
 3. 動作確認後、`MAINTENANCE_MODE=false` または未設定にして再デプロイする。
 
+## Maintenance Notice Mode
+
+メンテナンス予定を事前告知したい場合は、環境変数でメンテナンス予告を有効にします。
+
+```bash
+MAINTENANCE_NOTICE_MODE=true
+```
+
+必要に応じて表示文言も変更できます。
+
+```bash
+MAINTENANCE_NOTICE_MESSAGE="6/30 22:00-23:00 にメンテナンスを予定しています。"
+```
+
+メンテナンス予告中の挙動:
+
+- `/` のランディングページは通常どおり表示し、告知バーは表示しません。
+- `/login`, `/event/*` のホスト向け画面に告知バーを表示します。
+- `/client/*` の参加者ライト画面には表示しません。
+- APIは通常どおり動作します。
+- `MAINTENANCE_MODE=true` の実メンテナンス中は、メンテナンスモードを優先し、予告バーは表示しません。
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

@@ -1,4 +1,5 @@
 import { auth, signOut } from "@/auth";
+import MaintenanceNoticeBanner from "@/features/core/components/MaintenanceNoticeBanner";
 import SundogLightHeader from "@/features/core/components/SundogLightHeader";
 import React from "react";
 import { Toaster } from "react-hot-toast";
@@ -25,6 +26,7 @@ export default async function RootLayout({
                     }}
                 />
             </header>
+            <MaintenanceNoticeBanner maxWidthClassName="max-w-lg" />
             <main className={`w-full flex-grow max-w-lg`}>{children}</main>
             <Toaster position="top-center" />
         </div>

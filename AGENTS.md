@@ -69,6 +69,8 @@ SUNDOG Light は、参加者のスマートフォン画面をイベント用ラ�
 - `NEXT_PUBLIC_GA_MEASUREMENT_ID` - 任意のGoogle Analytics ID。
 - `MAINTENANCE_MODE=true` - メンテナンスモードを有効化。
 - `MAINTENANCE_MESSAGE` - メンテナンス画面/API向けの任意メッセージ。
+- `MAINTENANCE_NOTICE_MODE=true` - メンテナンス予告バーを有効化。
+- `MAINTENANCE_NOTICE_MESSAGE` - メンテナンス予告バー向けの任意メッセージ。
 
 ## 実装ガイド
 
