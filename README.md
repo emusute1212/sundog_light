@@ -34,7 +34,7 @@ MAINTENANCE_MESSAGE="サービス更新作業のため、一時的に停止し�
 
 - `/login`, `/event/*`, `/client/*` は `/maintenance` にリダイレクトします。
 - `/` のランディングページは通常どおり表示します。
-- `/api/event/*`, `/api/color/*`, `/api/pusher/*` は `503 Service Unavailable` を返します。
+- メンテナンス対象のAPIルート（`/api/event/*`, `/api/color/*`, `/api/pusher/*`）は `503 Service Unavailable` を返します。
 - `Retry-After: 300` と `Cache-Control: no-store` を返します。
 
 想定手順:
