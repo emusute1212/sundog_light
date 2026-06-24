@@ -1,0 +1,4 @@
+interface:
+  display_name: "SUNDOG Light Design"
+  short_description: "SUNDOG Lightの既存UIトーンに合わせる"
+  default_prompt: "Use $sundog-light-design to make this UI match SUNDOG Light's existing visual style."

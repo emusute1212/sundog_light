@@ -16,9 +16,15 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Maintenance Mode
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+メンテナンス中は利用者操作を停止し、専用の案内画面を表示します。具体的な有効化手順や内部の判定方法は、公開リポジトリ外の運用手順で管理します。
+
+メンテナンスモード中の挙動:
+
+- ランディングページは通常どおり表示します。
+- ホスト向け画面と参加者向け画面にはメンテナンス案内を表示します。
+- 更新操作は受け付けず、メンテナンス終了後に通常動作へ戻します。
 
 ## Learn More
 
