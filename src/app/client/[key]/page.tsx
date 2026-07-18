@@ -112,7 +112,7 @@ export default function ClientPage() {
                 socketConnectionRef.current = null;
                 setIsConnected(false);
             };
-        } catch (error) {
+        } catch {
             setSocketError("クライアント接続の初期化に失敗しました。");
             return;
         }

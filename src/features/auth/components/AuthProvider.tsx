@@ -26,11 +26,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const syncSession = () => {
             setSession(getStoredAuthSession());
         };
+        const initializeSession = window.setTimeout(() => {
+            syncSession();
+            setIsReady(true);
+        }, 0);
+        const unsubscribe = subscribeToAuthSession(syncSession);
 
-        syncSession();
-        setIsReady(true);
-
-        return subscribeToAuthSession(syncSession);
+        return () => {
+            window.clearTimeout(initializeSession);
+            unsubscribe();
+        };
     }, []);
 
     return (

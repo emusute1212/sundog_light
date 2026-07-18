@@ -101,7 +101,7 @@ export default function EventDetailPage() {
                 socketConnectionRef.current?.disconnect();
                 socketConnectionRef.current = null;
             };
-        } catch (error) {
+        } catch {
             toast.error("色変更用 WebSocket の初期化に失敗しました。");
             return;
         }
@@ -128,7 +128,7 @@ export default function EventDetailPage() {
                 setIsColorChanging(false);
                 toast.error("色変更の応答がありません。");
             }, 5000);
-        } catch (error) {
+        } catch {
             toast.error("色の変更に失敗しました。");
             setIsColorChanging(false);
         } finally {
