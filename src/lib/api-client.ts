@@ -2,6 +2,7 @@ import {
     clearStoredAuthSession,
     getStoredAuthSession,
 } from "@/features/auth/lib/auth-storage";
+import { redirectOnMaintenanceResponse } from "@/lib/maintenance-client";
 
 type ApiRequestOptions = {
     path: string;
@@ -94,6 +95,14 @@ export async function apiRequest<T>({
         headers,
         body: body === undefined ? undefined : JSON.stringify(body),
     });
+
+    if (redirectOnMaintenanceResponse(response)) {
+        throw new ApiError(
+            "メンテナンス中です。",
+            response.status,
+            response.statusText
+        );
+    }
 
     if (!response.ok) {
         const message = await getErrorMessage(response);

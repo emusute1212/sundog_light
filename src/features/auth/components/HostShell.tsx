@@ -1,6 +1,8 @@
 "use client";
 
+import MaintenanceNoticeBanner from "@/features/core/components/MaintenanceNoticeBanner";
 import SundogLightHeader from "@/features/core/components/SundogLightHeader";
+import type { MaintenanceNoticeStatus } from "@/lib/maintenance";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
@@ -16,8 +18,10 @@ function FullScreenLoader() {
 
 export default function HostShell({
     children,
+    notice,
 }: {
     children: React.ReactNode;
+    notice: MaintenanceNoticeStatus;
 }) {
     const { isReady, logout, session } = useAuth();
     const pathname = usePathname();
@@ -60,6 +64,10 @@ export default function HostShell({
                     }}
                 />
             </header>
+            <MaintenanceNoticeBanner
+                notice={notice}
+                maxWidthClassName="max-w-lg"
+            />
             <main className="w-full max-w-lg flex-grow">
                 {!isReady || shouldRedirectToLogin || shouldRedirectToEventList
                     ? <FullScreenLoader />
