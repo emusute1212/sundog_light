@@ -1,7 +1,3 @@
-import {
-    clearStoredAuthSession,
-    getStoredAuthSession,
-} from "@/features/auth/lib/auth-storage";
 import { redirectOnMaintenanceResponse } from "@/lib/maintenance-client";
 
 type ApiRequestOptions = {
@@ -10,6 +6,11 @@ type ApiRequestOptions = {
     body?: unknown;
     headers?: HeadersInit;
     requiresAuth?: boolean;
+};
+
+type CsrfTokenResponse = {
+    headerName?: string;
+    cookieName?: string;
 };
 
 export class ApiError extends Error {
@@ -31,6 +32,62 @@ function getApiBaseUrl() {
 
     return (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080")
         .replace(/\/$/, "");
+}
+
+function redirectToLogin() {
+    if (
+        typeof window === "undefined" ||
+        window.location.pathname === "/login"
+    ) {
+        return;
+    }
+
+    const callbackUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const params = new URLSearchParams({ callbackUrl });
+
+    window.location.replace(`/login?${params.toString()}`);
+}
+
+function getCookieValue(name: string) {
+    if (typeof document === "undefined") {
+        return null;
+    }
+
+    const prefix = `${name}=`;
+    const cookie = document.cookie
+        .split("; ")
+        .find((entry) => entry.startsWith(prefix));
+
+    if (!cookie) {
+        return null;
+    }
+
+    const value = cookie.slice(prefix.length);
+
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
+}
+
+async function setCsrfHeader(headers: Headers) {
+    const contract = await apiRequest<CsrfTokenResponse>({
+        path: "/api/session/csrf",
+        requiresAuth: false,
+    });
+
+    if (!contract.headerName || !contract.cookieName) {
+        throw new Error("CSRFトークン情報の形式が不正です。");
+    }
+
+    const token = getCookieValue(contract.cookieName);
+
+    if (!token) {
+        throw new Error("CSRFトークンを取得できませんでした。");
+    }
+
+    headers.set(contract.headerName, token);
 }
 
 export function getBackendOrigin() {
@@ -75,24 +132,14 @@ export async function apiRequest<T>({
         headers.set("Content-Type", "application/json");
     }
 
-    if (requiresAuth) {
-        const session = getStoredAuthSession();
-
-        if (!session?.token) {
-            clearStoredAuthSession();
-            throw new ApiError(
-                "認証情報が見つかりません。再ログインしてください。",
-                401,
-                "Unauthorized"
-            );
-        }
-
-        headers.set("Authorization", `Bearer ${session.token}`);
+    if (method !== "GET") {
+        await setCsrfHeader(headers);
     }
 
     const response = await fetch(`${getApiBaseUrl()}${path}`, {
         method,
         headers,
+        credentials: "include",
         body: body === undefined ? undefined : JSON.stringify(body),
     });
 
@@ -107,8 +154,8 @@ export async function apiRequest<T>({
     if (!response.ok) {
         const message = await getErrorMessage(response);
 
-        if (response.status === 401) {
-            clearStoredAuthSession();
+        if (response.status === 401 && requiresAuth) {
+            redirectToLogin();
         }
 
         throw new ApiError(message, response.status, response.statusText);

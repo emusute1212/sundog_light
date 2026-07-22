@@ -1,12 +1,8 @@
 "use client";
 
-import { loginWithGoogle } from "@/features/auth/api/auth-client";
-import { useAuth } from "@/features/auth/components/AuthProvider";
-import { getDisplayErrorMessage } from "@/lib/api-client";
+import { rememberPostLoginPath } from "@/features/auth/lib/post-login-redirect";
 import Script from "next/script";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
 
 type GoogleIdentityWindow = Window &
     typeof globalThis & {
@@ -15,8 +11,8 @@ type GoogleIdentityWindow = Window &
                 id: {
                     initialize: (config: {
                         client_id: string;
-                        callback: (response: { credential?: string }) => void;
-                        ux_mode?: "popup";
+                        login_uri: string;
+                        ux_mode: "redirect";
                     }) => void;
                     renderButton: (
                         parent: HTMLElement,
@@ -34,18 +30,14 @@ type GoogleIdentityWindow = Window &
     };
 
 export default function HostLoginPage() {
-    const { login } = useAuth();
     const buttonContainerRef = useRef<HTMLDivElement | null>(null);
-    const router = useRouter();
     const [isGoogleScriptLoaded, setIsGoogleScriptLoaded] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [callbackUrl, setCallbackUrl] = useState("/event/list");
     const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
 
-        setCallbackUrl(params.get("callbackUrl") ?? "/event/list");
+        rememberPostLoginPath(params.get("callbackUrl"));
     }, []);
 
     useEffect(() => {
@@ -60,33 +52,12 @@ export default function HostLoginPage() {
             return;
         }
 
-        const handleCredentialResponse = async (response: {
-            credential?: string;
-        }) => {
-            if (!response.credential) {
-                toast.error("Google 認証に失敗しました。");
-                return;
-            }
-
-            setIsSubmitting(true);
-
-            try {
-                const session = await loginWithGoogle(response.credential);
-                login(session);
-                router.replace(callbackUrl);
-            } catch (error) {
-                toast.error(getDisplayErrorMessage(error));
-            } finally {
-                setIsSubmitting(false);
-            }
-        };
-
         buttonContainerRef.current.innerHTML = "";
 
         google.accounts.id.initialize({
             client_id: googleClientId,
-            callback: handleCredentialResponse,
-            ux_mode: "popup",
+            login_uri: `${window.location.origin}/login/google`,
+            ux_mode: "redirect",
         });
 
         google.accounts.id.renderButton(buttonContainerRef.current, {
@@ -96,7 +67,7 @@ export default function HostLoginPage() {
             text: "signin_with",
             width: 320,
         });
-    }, [callbackUrl, googleClientId, isGoogleScriptLoaded, login, router]);
+    }, [googleClientId, isGoogleScriptLoaded]);
 
     return (
         <div className="flex justify-center">
@@ -114,11 +85,6 @@ export default function HostLoginPage() {
                     ) : (
                         <div className="flex w-full flex-col items-center gap-3">
                             <div ref={buttonContainerRef} />
-                            {isSubmitting && (
-                                <p className="text-sm text-gray-500">
-                                    ログイン中...
-                                </p>
-                            )}
                         </div>
                     )}
                 </div>

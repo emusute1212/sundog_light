@@ -2,10 +2,12 @@
 
 import MaintenanceNoticeBanner from "@/features/core/components/MaintenanceNoticeBanner";
 import SundogLightHeader from "@/features/core/components/SundogLightHeader";
+import { consumePostLoginPath } from "@/features/auth/lib/post-login-redirect";
+import { getDisplayErrorMessage } from "@/lib/api-client";
 import type { MaintenanceNoticeStatus } from "@/lib/maintenance";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Toaster } from "react-hot-toast";
+import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "./AuthProvider";
 
 function FullScreenLoader() {
@@ -26,15 +28,18 @@ export default function HostShell({
     const { isReady, logout, session } = useAuth();
     const pathname = usePathname();
     const router = useRouter();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const isLoginPage = pathname === "/login";
-    const shouldRedirectToLogin = isReady && !isLoginPage && session == null;
+    const shouldRedirectToLogin =
+        isReady && !isLoginPage && session == null && !isLoggingOut;
     const shouldRedirectToEventList = isReady && isLoginPage && session != null;
+    const shouldRestorePostLoginPath =
+        isReady && pathname === "/event/list" && session != null;
 
     useEffect(() => {
         if (shouldRedirectToLogin) {
-            const query = window.location.search;
-            const callbackUrl = query ? `${pathname}${query}` : pathname;
+            const callbackUrl = `${pathname}${window.location.search}${window.location.hash}`;
 
             router.replace(
                 `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
@@ -44,12 +49,23 @@ export default function HostShell({
 
         if (shouldRedirectToEventList) {
             router.replace("/event/list");
+            return;
+        }
+
+        if (shouldRestorePostLoginPath) {
+            const postLoginPath = consumePostLoginPath();
+            const currentPath = `${pathname}${window.location.search}${window.location.hash}`;
+
+            if (postLoginPath !== currentPath) {
+                router.replace(postLoginPath);
+            }
         }
     }, [
         pathname,
         router,
         shouldRedirectToEventList,
         shouldRedirectToLogin,
+        shouldRestorePostLoginPath,
     ]);
 
     return (
@@ -59,8 +75,21 @@ export default function HostShell({
                     isShowLogoutButton={session != null}
                     headerClickPath={session != null ? "/event/list" : "/"}
                     onClickLogoutButton={() => {
-                        logout();
-                        router.replace("/login");
+                        if (isLoggingOut) {
+                            return;
+                        }
+
+                        setIsLoggingOut(true);
+
+                        void logout().then(
+                            () => {
+                                router.replace("/login");
+                            },
+                            (error) => {
+                                setIsLoggingOut(false);
+                                toast.error(getDisplayErrorMessage(error));
+                            }
+                        );
                     }}
                 />
             </header>

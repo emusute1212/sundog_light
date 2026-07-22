@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
 
         return [
             {
+                source: "/login/google",
+                destination: `${backendBaseUrl}/login/google`,
+            },
+            {
                 source: "/ws",
                 destination: `${backendBaseUrl}/ws`,
             },

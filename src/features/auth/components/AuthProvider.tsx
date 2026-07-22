@@ -1,19 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import {
-    clearStoredAuthSession,
-    getStoredAuthSession,
-    setStoredAuthSession,
-    subscribeToAuthSession,
-} from "../lib/auth-storage";
+import { fetchAuthSession, logoutSession } from "../api/auth-client";
 import { AuthSession } from "../types/auth-session";
 
 type AuthContextValue = {
     isReady: boolean;
     session: AuthSession | null;
-    login: (session: AuthSession) => void;
-    logout: () => void;
+    logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -23,18 +17,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
-        const syncSession = () => {
-            setSession(getStoredAuthSession());
-        };
-        const initializeSession = window.setTimeout(() => {
-            syncSession();
-            setIsReady(true);
-        }, 0);
-        const unsubscribe = subscribeToAuthSession(syncSession);
+        let isCancelled = false;
+
+        // Remove JWT sessions left by deployments before cookie-based auth.
+        try {
+            window.localStorage.removeItem("sundog-light.auth-session");
+        } catch {
+            // Cookie-based session restoration must still continue.
+        }
+
+        void fetchAuthSession()
+            .then((nextSession) => {
+                if (!isCancelled) {
+                    setSession(nextSession);
+                }
+            })
+            .catch((error) => {
+                console.error("Failed to restore auth session:", error);
+
+                if (!isCancelled) {
+                    setSession(null);
+                }
+            })
+            .finally(() => {
+                if (!isCancelled) {
+                    setIsReady(true);
+                }
+            });
 
         return () => {
-            window.clearTimeout(initializeSession);
-            unsubscribe();
+            isCancelled = true;
         };
     }, []);
 
@@ -43,12 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             value={{
                 isReady,
                 session,
-                login: (nextSession: AuthSession) => {
-                    setStoredAuthSession(nextSession);
-                    setSession(nextSession);
-                },
-                logout: () => {
-                    clearStoredAuthSession();
+                logout: async () => {
+                    await logoutSession();
                     setSession(null);
                 },
             }}

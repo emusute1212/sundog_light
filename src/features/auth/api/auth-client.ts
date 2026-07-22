@@ -1,31 +1,47 @@
-import { apiRequest } from "@/lib/api-client";
+import { ApiError, apiRequest } from "@/lib/api-client";
 import { AuthSession } from "../types/auth-session";
 
-type AuthResponse = {
-    token?: string;
-    user?: {
-        id?: string;
-    };
+type UserResponse = {
+    id?: string;
 };
 
-export async function loginWithGoogle(idToken: string): Promise<AuthSession> {
-    const response = await apiRequest<AuthResponse>({
-        path: "/api/auth/google",
-        method: "POST",
-        body: {
-            idToken,
-        },
-        requiresAuth: false,
-    });
+export async function fetchAuthSession(): Promise<AuthSession | null> {
+    try {
+        const response = await apiRequest<UserResponse>({
+            path: "/api/session/me",
+            requiresAuth: false,
+        });
 
-    if (!response.token || !response.user?.id) {
-        throw new Error("ログインレスポンスの形式が不正です。");
+        if (!response.id) {
+            throw new Error("セッションレスポンスの形式が不正です。");
+        }
+
+        return {
+            user: {
+                id: response.id,
+            },
+        };
+    } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+            return null;
+        }
+
+        throw error;
     }
+}
 
-    return {
-        token: response.token,
-        user: {
-            id: response.user.id,
-        },
-    };
+export async function logoutSession() {
+    try {
+        await apiRequest<void>({
+            path: "/api/session/logout",
+            method: "POST",
+            requiresAuth: false,
+        });
+    } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+            return;
+        }
+
+        throw error;
+    }
 }
