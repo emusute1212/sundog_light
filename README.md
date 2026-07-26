@@ -11,6 +11,14 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Public Origin
+
+canonical originと旧hostからのredirectは環境変数で設定し、production codeへ実domainを直接書きません。
+
+- `APP_PUBLIC_ORIGIN`: 公開ページのcanonical origin。
+- `APP_LEGACY_HOSTS`: canonical originへ恒久redirectする旧hostnameの一覧。
+- production値はデプロイ先で管理し、ローカル値はGit管理外に置きます。
+
 ## Maintenance Mode
 
 メンテナンス中は利用者操作を停止し、専用の案内画面を表示します。具体的な有効化手順や内部の判定方法は、公開リポジトリ外の運用手順で管理します。

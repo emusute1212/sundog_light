@@ -1,20 +1,36 @@
 import type { NextConfig } from "next";
+import { resolveLegacyHosts, resolveSiteUrl } from "./src/lib/site";
+
+function escapeRegex(value: string) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function createLegacyRedirects(
+    canonicalOrigin: string,
+    legacyHosts: string[]
+) {
+    const canonicalHostname = new URL(canonicalOrigin).hostname.toLowerCase();
+
+    return legacyHosts
+        .filter((host) => host !== canonicalHostname)
+        .map((host) => ({
+            source: "/:path*",
+            has: [
+                {
+                    type: "host" as const,
+                    value: escapeRegex(host),
+                },
+            ],
+            destination: `${canonicalOrigin}/:path*`,
+            permanent: true,
+        }));
+}
 
 const nextConfig: NextConfig = {
     async redirects() {
-        return [
-            {
-                source: "/:path*",
-                has: [
-                    {
-                        type: "host",
-                        value: "sundog-light.vercel.app",
-                    },
-                ],
-                destination: "https://app.sundog-org.com/:path*",
-                permanent: true,
-            },
-        ];
+        const canonicalOrigin = resolveSiteUrl();
+
+        return createLegacyRedirects(canonicalOrigin, resolveLegacyHosts());
     },
     async rewrites() {
         const backendBaseUrl = (

@@ -48,6 +48,8 @@ SUNDOG Light は、参加者のスマートフォン画面をイベント用ラ�
 
 ## 設定
 
+- `APP_PUBLIC_ORIGIN` - canonical origin。OGP、sitemap、robots、legacy host redirectに利用する。productionでは明示設定する。
+- `APP_LEGACY_HOSTS` - `APP_PUBLIC_ORIGIN`へ恒久redirectする旧hostnameのカンマ区切り。schemeとpathは含めない。
 - `NEXT_PUBLIC_GA_MEASUREMENT_ID` - 任意のGoogle Analytics ID。
 - その他の設定項目と例は `.env.example` を参照し、実値はGit管理外で扱う。
 
