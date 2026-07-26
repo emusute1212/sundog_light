@@ -1,6 +1,10 @@
 import { hexColorToInt, intColorToHex } from "@/lib/color";
 
-type SockJsConstructor = new (url: string) => unknown;
+type SockJsSocket = {
+    close: () => void;
+};
+
+type SockJsConstructor = new (url: string) => SockJsSocket;
 
 type StompMessage = {
     body: string;
@@ -31,7 +35,7 @@ type StompClient = {
 };
 
 type StompFactory = {
-    over: (socket: unknown) => StompClient;
+    over: (socket: SockJsSocket) => StompClient;
 };
 
 declare global {
@@ -90,15 +94,33 @@ export function connectColorSocket({
     const socket = new SockJS("/ws");
     const client = Stomp.over(socket);
     let subscription: StompSubscription | null = null;
+    let isDisposed = false;
+
+    const closeRawSocket = () => {
+        try {
+            socket.close();
+        } catch {
+            // The SockJS transport may already be closed.
+        }
+    };
 
     client.debug = () => undefined;
 
     client.connect(
         {},
         () => {
+            if (isDisposed) {
+                closeRawSocket();
+                return;
+            }
+
             subscription = client.subscribe(
                 `/topic/event/${eventId}`,
                 (message) => {
+                    if (isDisposed) {
+                        return;
+                    }
+
                     try {
                         const payload = JSON.parse(
                             message.body
@@ -110,9 +132,15 @@ export function connectColorSocket({
                 }
             );
 
-            onConnected();
+            if (!isDisposed) {
+                onConnected();
+            }
         },
         (error) => {
+            if (isDisposed) {
+                return;
+            }
+
             onError(
                 error instanceof Error
                     ? error.message
@@ -123,14 +151,38 @@ export function connectColorSocket({
 
     return {
         disconnect: () => {
-            subscription?.unsubscribe();
-            subscription = null;
+            if (isDisposed) {
+                return;
+            }
+
+            // Mark the connection as intentionally closed before any callback
+            // can be emitted by the underlying transport.
+            isDisposed = true;
+
+            try {
+                subscription?.unsubscribe();
+            } catch {
+                // Ignore an unsubscribe race after transport loss.
+            } finally {
+                subscription = null;
+            }
 
             if (client.connected) {
-                client.disconnect(() => undefined);
+                try {
+                    client.disconnect(() => undefined);
+                } catch {
+                    closeRawSocket();
+                }
+            } else {
+                // Legacy stompjs disconnect() does not close a CONNECTING socket.
+                closeRawSocket();
             }
         },
         sendColor: (color: string) => {
+            if (isDisposed || !client.connected) {
+                throw new Error("Color WebSocket is not connected.");
+            }
+
             client.send(
                 `/app/event/${eventId}/color`,
                 {},

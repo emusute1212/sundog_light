@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { fetchAuthSession, logoutSession } from "../api/auth-client";
+import { runBeforeLogoutCleanups } from "../lib/logout-lifecycle";
 import { AuthSession } from "../types/auth-session";
 
 type AuthContextValue = {
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 isReady,
                 session,
                 logout: async () => {
+                    runBeforeLogoutCleanups();
                     await logoutSession();
                     setSession(null);
                 },

@@ -3,12 +3,18 @@
 import MaintenanceNoticeBanner from "@/features/core/components/MaintenanceNoticeBanner";
 import SundogLightHeader from "@/features/core/components/SundogLightHeader";
 import { consumePostLoginPath } from "@/features/auth/lib/post-login-redirect";
+import type { AuthSession } from "@/features/auth/types/auth-session";
 import { getDisplayErrorMessage } from "@/lib/api-client";
 import type { MaintenanceNoticeStatus } from "@/lib/maintenance";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "./AuthProvider";
+
+type LogoutAttempt = {
+    phase: "requesting" | "navigating";
+    session: AuthSession;
+};
 
 function FullScreenLoader() {
     return (
@@ -28,9 +34,19 @@ export default function HostShell({
     const { isReady, logout, session } = useAuth();
     const pathname = usePathname();
     const router = useRouter();
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [logoutAttempt, setLogoutAttempt] = useState<LogoutAttempt | null>(
+        null
+    );
 
     const isLoginPage = pathname === "/login";
+    const isSameLogoutSession =
+        logoutAttempt != null &&
+        (session == null || session === logoutAttempt.session);
+    const isLoggingOut =
+        logoutAttempt?.phase === "requesting" ||
+        (logoutAttempt?.phase === "navigating" &&
+            isSameLogoutSession &&
+            !isLoginPage);
     const shouldRedirectToLogin =
         isReady && !isLoginPage && session == null && !isLoggingOut;
     const shouldRedirectToEventList = isReady && isLoginPage && session != null;
@@ -68,6 +84,22 @@ export default function HostShell({
         shouldRestorePostLoginPath,
     ]);
 
+    useEffect(() => {
+        if (!isLoginPage || logoutAttempt?.phase !== "navigating") {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setLogoutAttempt((current) =>
+                current?.phase === "navigating" ? null : current
+            );
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
+    }, [isLoginPage, logoutAttempt]);
+
     return (
         <div className="flex h-screen flex-col items-center">
             <header className="sticky top-0 w-full bg-white pb-4">
@@ -75,18 +107,25 @@ export default function HostShell({
                     isShowLogoutButton={session != null}
                     headerClickPath={session != null ? "/event/list" : "/"}
                     onClickLogoutButton={() => {
-                        if (isLoggingOut) {
+                        if (isLoggingOut || session == null) {
                             return;
                         }
 
-                        setIsLoggingOut(true);
+                        setLogoutAttempt({
+                            phase: "requesting",
+                            session,
+                        });
 
                         void logout().then(
                             () => {
+                                setLogoutAttempt({
+                                    phase: "navigating",
+                                    session,
+                                });
                                 router.replace("/login");
                             },
                             (error) => {
-                                setIsLoggingOut(false);
+                                setLogoutAttempt(null);
                                 toast.error(getDisplayErrorMessage(error));
                             }
                         );
@@ -98,7 +137,10 @@ export default function HostShell({
                 maxWidthClassName="max-w-lg"
             />
             <main className="w-full max-w-lg flex-grow">
-                {!isReady || shouldRedirectToLogin || shouldRedirectToEventList
+                {!isReady ||
+                isLoggingOut ||
+                shouldRedirectToLogin ||
+                shouldRedirectToEventList
                     ? <FullScreenLoader />
                     : children}
             </main>

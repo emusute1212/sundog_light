@@ -1,4 +1,5 @@
 "use client";
+import { registerBeforeLogoutCleanup } from "@/features/auth/lib/logout-lifecycle";
 import { fetchEventDetail } from "@/features/event/api/event-client";
 import EventDetailSection from "@/features/event/components/detail/section/EventDetailSection";
 import {
@@ -62,6 +63,13 @@ export default function EventDetailPage() {
             return;
         }
 
+        const clearColorChangeTimeout = () => {
+            if (colorChangeTimeoutRef.current != null) {
+                window.clearTimeout(colorChangeTimeoutRef.current);
+                colorChangeTimeoutRef.current = null;
+            }
+        };
+
         try {
             const connection = connectColorSocket({
                 eventId: eventUuid,
@@ -69,20 +77,12 @@ export default function EventDetailPage() {
                     setIsSocketConnected(true);
                 },
                 onColorChanged: (color) => {
-                    if (colorChangeTimeoutRef.current != null) {
-                        window.clearTimeout(colorChangeTimeoutRef.current);
-                        colorChangeTimeoutRef.current = null;
-                    }
-
+                    clearColorChangeTimeout();
                     setSelectedColor(color);
                     setIsColorChanging(false);
                 },
                 onError: (message) => {
-                    if (colorChangeTimeoutRef.current != null) {
-                        window.clearTimeout(colorChangeTimeoutRef.current);
-                        colorChangeTimeoutRef.current = null;
-                    }
-
+                    clearColorChangeTimeout();
                     setIsSocketConnected(false);
                     setIsColorChanging(false);
                     toast.error(message);
@@ -91,15 +91,24 @@ export default function EventDetailPage() {
 
             socketConnectionRef.current = connection;
 
-            return () => {
-                if (colorChangeTimeoutRef.current != null) {
-                    window.clearTimeout(colorChangeTimeoutRef.current);
-                    colorChangeTimeoutRef.current = null;
-                }
+            const disconnectConnection = () => {
+                clearColorChangeTimeout();
+                connection.disconnect();
 
+                if (socketConnectionRef.current === connection) {
+                    socketConnectionRef.current = null;
+                }
+            };
+
+            const unregisterBeforeLogout = registerBeforeLogoutCleanup(() => {
                 setIsSocketConnected(false);
-                socketConnectionRef.current?.disconnect();
-                socketConnectionRef.current = null;
+                setIsColorChanging(false);
+                disconnectConnection();
+            });
+
+            return () => {
+                unregisterBeforeLogout();
+                disconnectConnection();
             };
         } catch {
             toast.error("色変更用 WebSocket の初期化に失敗しました。");
