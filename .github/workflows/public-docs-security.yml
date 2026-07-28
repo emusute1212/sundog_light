@@ -1,0 +1,21 @@
+name: Public documentation security
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Test documentation policy
+        run: node --test scripts/public-docs-policy.verify.mjs
+      - name: Check public documentation
+        run: node scripts/check-public-docs.mjs
