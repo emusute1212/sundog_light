@@ -7,8 +7,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
-    "test": "vitest run"
+    "check:public-docs": "node --test scripts/public-docs-policy.verify.mjs && node scripts/check-public-docs.mjs",
+    "lint": "pnpm check:public-docs && eslint .",
+    "test": "pnpm check:public-docs && vitest run"
   },
   "dependencies": {
     "lucide-react": "^0.475.0",
