@@ -58,10 +58,10 @@ const rules = [
         id: "wire-format",
         description: "concrete external wire format",
         matches: (line) =>
-            /(?:外部契約|通信契約|wire\s*format).{0,80}(?:\b\d+-?bit\b|整数|integer|#RRGGBB)/i.test(
+            /(?:外部契約|通信契約|wire[-\s]*format).{0,80}(?:\b\d+-?bit\b|整数|integer|#RRGGBB)/i.test(
                 line,
             ) ||
-            /(?:\b\d+-?bit\b|整数|integer|#RRGGBB).{0,80}(?:外部契約|通信契約|wire\s*format)/i.test(
+            /(?:\b\d+-?bit\b|整数|integer|#RRGGBB).{0,80}(?:外部契約|通信契約|wire[-\s]*format)/i.test(
                 line,
             ),
     },
@@ -69,7 +69,7 @@ const rules = [
         id: "data-structure-field",
         description: "concrete data-structure field",
         matches: (line) =>
-            /^\s*[A-Za-z_$][A-Za-z0-9_$]*\??\s*:\s*(?:string|number|boolean|unknown|object)\b/.test(
+            /^\s*(?:[-*]\s+)?[a-z_$][A-Za-z0-9_$]*\??\s*:\s*(?:(?:string|number|boolean|unknown|object)\b|[A-Z][A-Za-z0-9_$]*\b)(?:<[^>]+>)?(?:\[\])?(?:\s*\|\s*(?:null|undefined))*[;,]?\s*$/.test(
                 line,
             ) ||
             /^\s*(?:[-*]\s+)?`[a-z][A-Za-z0-9_$]*`:\s+/.test(line),

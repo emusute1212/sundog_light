@@ -27,6 +27,19 @@ for (const [ruleId, content] of unsafeExamples) {
     });
 }
 
+const unsafeVariants = [
+    ["wire-format", "hyphenated wire format", "wire-format uses a 24-bit integer"],
+    ["data-structure-field", "custom typed field", "eventColor: EventColor"],
+    ["data-structure-field", "bullet typed field", "- eventId: EventId"],
+];
+
+for (const [ruleId, label, content] of unsafeVariants) {
+    test(`detects ${label}`, () => {
+        const violations = findPublicDocumentationViolations(content);
+        assert.ok(violations.some((violation) => violation.ruleId === ruleId));
+    });
+}
+
 test("allows product-level documentation", () => {
     const content = [
         "参加者は共有URLからライト画面を開きます。",
