@@ -199,6 +199,7 @@ function ClientLightPage({ eventId }: { eventId: string }) {
 
                         hasReceivedSocketColorRef.current = true;
                         setBackgroundColor(color);
+                        setIsInitialColorLoading(false);
                         setInitialColorError(null);
                         gtagEvent({
                             action: "color_received",

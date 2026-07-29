@@ -147,6 +147,12 @@ describe("ClientPage WebSocket reconnection", () => {
         act(() => {
             callbacks[0].onColorChanged("#445566");
         });
+
+        expect(screen.queryByText("接続中...")).not.toBeInTheDocument();
+        expect(view.container.querySelector("div[style]")).toHaveStyle({
+            backgroundColor: "#445566",
+        });
+
         await act(async () => {
             resolveInitialColor("#112233");
         });
