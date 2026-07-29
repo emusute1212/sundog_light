@@ -66,6 +66,15 @@ const rules = [
             ),
     },
     {
+        id: "data-structure-field",
+        description: "concrete data-structure field",
+        matches: (line) =>
+            /^\s*[A-Za-z_$][A-Za-z0-9_$]*\??\s*:\s*(?:string|number|boolean|unknown|object)\b/.test(
+                line,
+            ) ||
+            /^\s*(?:[-*]\s+)?`[a-z][A-Za-z0-9_$]*`:\s+/.test(line),
+    },
+    {
         id: "security-response",
         description: "access-control response behavior",
         matches: (line) =>

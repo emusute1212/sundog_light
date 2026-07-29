@@ -25,20 +25,6 @@ SUNDOG Light は、参加者のスマートフォン画面をイベント用ラ�
 - `/client/[key]` - 参加者ライト画面。`key` はイベントUUID。
 - `/maintenance` - メンテナンスモード画面。
 
-## 主要なイベント型
-
-主要なイベント型は `EventDetail`:
-
-```ts
-{
-  name: string;
-  colors: string[];
-  uuid: string;
-  currentColor?: string | null;
-  clientPageUrl?: string;
-}
-```
-
 ## 開発コマンド
 
 - 依存関係は `pnpm install` で入れる。`preinstall` でpnpmが強制される。

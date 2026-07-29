@@ -13,6 +13,7 @@ const unsafeExamples = [
     ["sensitive-identifier", "APPLICATION_SECRET"],
     ["internal-header", "X-Internal-Mode"],
     ["wire-format", "外部契約では24-bit整数を送信します"],
+    ["data-structure-field", "`clientPageUrl`: 参加者向けURL"],
     ["security-response", "401 responses redirect to another page"],
     ["personal-path", "/Users/example/project/spec.json"],
     ["deployment-url", "https://sample.vercel.app"],
