@@ -1,5 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { createLegacyRedirects } from "./next.config";
+import {
+    createLegacyRedirects,
+    resolveBackendBaseUrl,
+} from "./next.config";
+
+describe("resolveBackendBaseUrl", () => {
+    it("requires an explicit backend URL in production", () => {
+        expect(() =>
+            resolveBackendBaseUrl({
+                NEXT_PUBLIC_API_BASE_URL: " ",
+                NODE_ENV: "production",
+            })
+        ).toThrow(
+            "NEXT_PUBLIC_API_BASE_URL must be set for production builds."
+        );
+    });
+
+    it("uses localhost only outside production and removes a trailing slash", () => {
+        expect(resolveBackendBaseUrl({ NODE_ENV: "development" })).toBe(
+            "http://localhost:8080"
+        );
+        expect(
+            resolveBackendBaseUrl({
+                NEXT_PUBLIC_API_BASE_URL: "https://api.example.com/",
+                NODE_ENV: "production",
+            })
+        ).toBe("https://api.example.com");
+    });
+});
 
 describe("createLegacyRedirects", () => {
     it("escapes hostnames before using them as host matchers", () => {
