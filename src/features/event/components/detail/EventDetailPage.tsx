@@ -42,7 +42,8 @@ export default function EventDetailPage() {
     const colorChangeTimeoutRef = useRef<number | null>(null);
     const reconnectTimerRef = useRef<number | null>(null);
     const reconnectAttemptRef = useRef(0);
-    const hasReceivedSocketColorRef = useRef(false);
+    const colorUpdateVersionRef = useRef(0);
+    const shouldResyncOnConnectRef = useRef(false);
     const {
         isReady: isSocketReady,
         onScriptError,
@@ -52,7 +53,9 @@ export default function EventDetailPage() {
 
     useEffect(() => {
         let isActive = true;
-        hasReceivedSocketColorRef.current = false;
+        colorUpdateVersionRef.current = 0;
+        shouldResyncOnConnectRef.current = false;
+        const requestVersion = ++colorUpdateVersionRef.current;
         setIsLoading(true);
 
         const callApi = async () => {
@@ -66,7 +69,7 @@ export default function EventDetailPage() {
                 setError(null);
                 setEventDetail(data);
 
-                if (!hasReceivedSocketColorRef.current) {
+                if (requestVersion === colorUpdateVersionRef.current) {
                     setSelectedColor(data.currentColor ?? null);
                 }
             } catch (error) {
@@ -141,10 +144,43 @@ export default function EventDetailPage() {
             }
 
             clearColorChangeTimeout();
+            shouldResyncOnConnectRef.current = true;
             disconnectCurrent();
             setIsSocketConnected(false);
             setIsColorChanging(false);
             scheduleReconnect(message);
+        };
+
+        const synchronizeCurrentColor = async (generation: number) => {
+            const requestVersion = ++colorUpdateVersionRef.current;
+
+            try {
+                const data = await fetchEventDetail(eventUuid);
+
+                if (
+                    !isActive ||
+                    generation !== connectionGeneration ||
+                    requestVersion !== colorUpdateVersionRef.current
+                ) {
+                    return;
+                }
+
+                setSelectedColor(data.currentColor ?? null);
+                setSocketError(null);
+            } catch {
+                if (
+                    !isActive ||
+                    generation !== connectionGeneration ||
+                    requestVersion !== colorUpdateVersionRef.current
+                ) {
+                    return;
+                }
+
+                const message = "現在の色を同期できませんでした。";
+                shouldResyncOnConnectRef.current = true;
+                setSocketError(message);
+                toast.error(message);
+            }
         };
 
         function openConnection() {
@@ -165,9 +201,16 @@ export default function EventDetailPage() {
                             return;
                         }
 
+                        const shouldResynchronize =
+                            shouldResyncOnConnectRef.current;
+                        shouldResyncOnConnectRef.current = false;
                         reconnectAttemptRef.current = 0;
                         setIsSocketConnected(true);
                         setSocketError(null);
+
+                        if (shouldResynchronize) {
+                            void synchronizeCurrentColor(generation);
+                        }
                     },
                     onColorChanged: (color) => {
                         if (
@@ -177,10 +220,12 @@ export default function EventDetailPage() {
                             return;
                         }
 
-                        hasReceivedSocketColorRef.current = true;
+                        colorUpdateVersionRef.current += 1;
+                        shouldResyncOnConnectRef.current = false;
                         clearColorChangeTimeout();
                         setSelectedColor(color);
                         setIsColorChanging(false);
+                        setSocketError(null);
                     },
                     onError: (message) => {
                         handleConnectionFailure(message, generation);

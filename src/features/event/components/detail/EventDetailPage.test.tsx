@@ -149,10 +149,24 @@ describe("EventDetailPage", () => {
         view.unmount();
     });
 
-    it("reconnects after a transient socket error", async () => {
+    it("resynchronizes the selected color after reconnecting", async () => {
+        vi.mocked(fetchEventDetail)
+            .mockResolvedValueOnce({
+                colors: ["#112233", "#445566"],
+                currentColor: "#112233",
+                name: "Test event",
+                uuid: "event-id",
+            })
+            .mockResolvedValueOnce({
+                colors: ["#112233", "#445566"],
+                currentColor: "#445566",
+                name: "Test event",
+                uuid: "event-id",
+            });
         const view = await renderLoadedPage();
 
         act(() => {
+            callbacks[0].onConnected();
             callbacks[0].onError("temporary error");
             vi.advanceTimersByTime(1000);
         });
@@ -161,10 +175,60 @@ describe("EventDetailPage", () => {
         expect(disconnects[0]).toHaveBeenCalledOnce();
         expect(toastError).not.toHaveBeenCalled();
 
-        act(() => {
+        await act(async () => {
             callbacks[1].onConnected();
+            await Promise.resolve();
         });
 
+        expect(fetchEventDetail).toHaveBeenCalledTimes(2);
+        expect(screen.getByTestId("selected-color")).toHaveTextContent(
+            "#445566"
+        );
+
+        fireEvent.click(screen.getByRole("button", { name: "#445566" }));
+
+        expect(sendColors[1]).toHaveBeenCalledWith({ color: null });
+        view.unmount();
+    });
+
+    it("keeps a live color received while reconnect synchronization is pending", async () => {
+        let resolveReconnectDetail: (
+            value: Awaited<ReturnType<typeof fetchEventDetail>>
+        ) => void = () => undefined;
+        vi.mocked(fetchEventDetail)
+            .mockResolvedValueOnce({
+                colors: ["#112233", "#445566"],
+                currentColor: "#112233",
+                name: "Test event",
+                uuid: "event-id",
+            })
+            .mockReturnValueOnce(
+                new Promise((resolve) => {
+                    resolveReconnectDetail = resolve;
+                })
+            );
+        const view = await renderLoadedPage();
+
+        act(() => {
+            callbacks[0].onConnected();
+            callbacks[0].onError("temporary error");
+            vi.advanceTimersByTime(1000);
+            callbacks[1].onConnected();
+            callbacks[1].onColorChanged("#445566");
+        });
+        await act(async () => {
+            resolveReconnectDetail({
+                colors: ["#112233", "#445566"],
+                currentColor: "#112233",
+                name: "Test event",
+                uuid: "event-id",
+            });
+        });
+
+        expect(fetchEventDetail).toHaveBeenCalledTimes(2);
+        expect(screen.getByTestId("selected-color")).toHaveTextContent(
+            "#445566"
+        );
         view.unmount();
     });
 
