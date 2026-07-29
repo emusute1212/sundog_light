@@ -40,7 +40,8 @@ function ClientLightPage({ eventId }: { eventId: string }) {
     const socketConnectionRef = useRef<ColorSocketConnection | null>(null);
     const reconnectTimerRef = useRef<number | null>(null);
     const reconnectAttemptRef = useRef(0);
-    const hasReceivedSocketColorRef = useRef(false);
+    const colorUpdateVersionRef = useRef(0);
+    const shouldResyncOnConnectRef = useRef(false);
     const {
         isReady: isSocketReady,
         onScriptError,
@@ -68,6 +69,7 @@ function ClientLightPage({ eventId }: { eventId: string }) {
 
     useEffect(() => {
         let isActive = true;
+        const requestVersion = ++colorUpdateVersionRef.current;
         setIsInitialColorLoading(true);
 
         const loadCurrentColor = async () => {
@@ -78,11 +80,11 @@ function ClientLightPage({ eventId }: { eventId: string }) {
                     return;
                 }
 
-                if (!hasReceivedSocketColorRef.current) {
+                if (requestVersion === colorUpdateVersionRef.current) {
                     setBackgroundColor(color);
+                    setInitialColorError(null);
                 }
 
-                setInitialColorError(null);
                 gtagEvent({
                     action: "client_connect",
                     category: "client_engagement",
@@ -93,11 +95,14 @@ function ClientLightPage({ eventId }: { eventId: string }) {
                     return;
                 }
 
-                if (!hasReceivedSocketColorRef.current) {
+                if (requestVersion === colorUpdateVersionRef.current) {
                     setInitialColorError(getDisplayErrorMessage(error));
                 }
             } finally {
-                if (isActive) {
+                if (
+                    isActive &&
+                    requestVersion === colorUpdateVersionRef.current
+                ) {
                     setIsInitialColorLoading(false);
                 }
             }
@@ -161,10 +166,48 @@ function ClientLightPage({ eventId }: { eventId: string }) {
             }
 
             connectionGeneration += 1;
+            shouldResyncOnConnectRef.current = true;
             socketConnectionRef.current?.disconnect();
             socketConnectionRef.current = null;
             setIsConnected(false);
             scheduleReconnect(message);
+        };
+
+        const synchronizeCurrentColor = async (generation: number) => {
+            const requestVersion = ++colorUpdateVersionRef.current;
+
+            try {
+                const color = await fetchPublicCurrentColor(eventId);
+
+                if (
+                    !isActive ||
+                    generation !== connectionGeneration ||
+                    requestVersion !== colorUpdateVersionRef.current
+                ) {
+                    return;
+                }
+
+                setBackgroundColor(color);
+                setInitialColorError(null);
+            } catch (error) {
+                if (
+                    !isActive ||
+                    generation !== connectionGeneration ||
+                    requestVersion !== colorUpdateVersionRef.current
+                ) {
+                    return;
+                }
+
+                setInitialColorError(getDisplayErrorMessage(error));
+            } finally {
+                if (
+                    isActive &&
+                    generation === connectionGeneration &&
+                    requestVersion === colorUpdateVersionRef.current
+                ) {
+                    setIsInitialColorLoading(false);
+                }
+            }
         };
 
         function openConnection() {
@@ -185,9 +228,16 @@ function ClientLightPage({ eventId }: { eventId: string }) {
                             return;
                         }
 
+                        const shouldResynchronize =
+                            shouldResyncOnConnectRef.current;
+                        shouldResyncOnConnectRef.current = false;
                         reconnectAttemptRef.current = 0;
                         setIsConnected(true);
                         setSocketError(null);
+
+                        if (shouldResynchronize) {
+                            void synchronizeCurrentColor(generation);
+                        }
                     },
                     onColorChanged: (color) => {
                         if (
@@ -197,7 +247,7 @@ function ClientLightPage({ eventId }: { eventId: string }) {
                             return;
                         }
 
-                        hasReceivedSocketColorRef.current = true;
+                        colorUpdateVersionRef.current += 1;
                         setBackgroundColor(color);
                         setIsInitialColorLoading(false);
                         setInitialColorError(null);

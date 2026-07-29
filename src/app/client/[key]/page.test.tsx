@@ -117,11 +117,13 @@ describe("ClientPage WebSocket reconnection", () => {
 
         expect(connectColorSocketMock).toHaveBeenCalledTimes(2);
 
-        act(() => {
+        await act(async () => {
             callbacks[1].onConnected();
+            await Promise.resolve();
         });
 
         expect(screen.queryByText("再接続中...")).not.toBeInTheDocument();
+        expect(fetchPublicCurrentColorMock).toHaveBeenCalledTimes(2);
         expect(gtagEventMock).toHaveBeenCalledWith({
             action: "client_connect",
             category: "client_engagement",
@@ -131,6 +133,66 @@ describe("ClientPage WebSocket reconnection", () => {
             action: "color_received",
             category: "client_engagement",
             label: "event-id",
+        });
+        view.unmount();
+    });
+
+    it("resynchronizes the current color after reconnecting", async () => {
+        fetchPublicCurrentColorMock
+            .mockResolvedValueOnce("#112233")
+            .mockResolvedValueOnce("#778899");
+        const view = render(<ClientPage />);
+
+        await act(async () => {
+            await Promise.resolve();
+        });
+        act(() => {
+            callbacks[0].onConnected();
+            callbacks[0].onError("temporary error");
+            vi.advanceTimersByTime(1000);
+        });
+
+        await act(async () => {
+            callbacks[1].onConnected();
+            await Promise.resolve();
+        });
+
+        expect(fetchPublicCurrentColorMock).toHaveBeenCalledTimes(2);
+        expect(view.container.querySelector("div[style]")).toHaveStyle({
+            backgroundColor: "#778899",
+        });
+        view.unmount();
+    });
+
+    it("keeps a live color received while reconnect synchronization is pending", async () => {
+        let resolveReconnectColor: (color: string | null) => void = () =>
+            undefined;
+        fetchPublicCurrentColorMock
+            .mockResolvedValueOnce("#112233")
+            .mockReturnValueOnce(
+                new Promise((resolve) => {
+                    resolveReconnectColor = resolve;
+                })
+            );
+        const view = render(<ClientPage />);
+
+        await act(async () => {
+            await Promise.resolve();
+        });
+        act(() => {
+            callbacks[0].onConnected();
+            callbacks[0].onError("temporary error");
+            vi.advanceTimersByTime(1000);
+            callbacks[1].onConnected();
+            callbacks[1].onColorChanged("#445566");
+        });
+        await act(async () => {
+            resolveReconnectColor("#778899");
+        });
+
+        expect(fetchPublicCurrentColorMock).toHaveBeenCalledTimes(2);
+        expect(view.container.querySelector("div[style]")).toHaveStyle({
+            backgroundColor: "#445566",
         });
         view.unmount();
     });
