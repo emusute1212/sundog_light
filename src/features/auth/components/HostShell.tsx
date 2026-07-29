@@ -1,6 +1,7 @@
 "use client";
 
 import MaintenanceNoticeBanner from "@/features/core/components/MaintenanceNoticeBanner";
+import EventMaintenanceGate from "@/features/core/components/EventMaintenanceGate";
 import SundogLightHeader from "@/features/core/components/SundogLightHeader";
 import { consumePostLoginPath } from "@/features/auth/lib/post-login-redirect";
 import type { AuthSession } from "@/features/auth/types/auth-session";
@@ -191,7 +192,7 @@ export default function HostShell({
                         onRetry={retrySession}
                     />
                 ) : (
-                    children
+                    <EventMaintenanceGate>{children}</EventMaintenanceGate>
                 )}
             </main>
             <Toaster position="top-center" />

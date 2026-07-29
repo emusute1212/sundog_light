@@ -1,3 +1,11 @@
+import { fetchMaintenanceStatus } from "./maintenance";
+
+const MAINTENANCE_STATUS_PATH = "/api/maintenance/status";
+
+export function getClientMaintenanceStatus() {
+    return fetchMaintenanceStatus(MAINTENANCE_STATUS_PATH);
+}
+
 export function redirectOnMaintenanceResponse(response: Response): boolean {
     const isMaintenanceResponse =
         response.status === 503 &&

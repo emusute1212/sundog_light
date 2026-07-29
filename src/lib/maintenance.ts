@@ -86,9 +86,11 @@ function getMaintenanceStatusUrl() {
     return `${backendBaseUrl}/api/maintenance/status`;
 }
 
-export async function getMaintenanceStatus(): Promise<MaintenanceStatusResponse> {
+export async function fetchMaintenanceStatus(
+    url: string
+): Promise<MaintenanceStatusResponse> {
     try {
-        const response = await fetch(getMaintenanceStatusUrl(), {
+        const response = await fetch(url, {
             headers: {
                 Accept: "application/json",
             },
@@ -107,4 +109,8 @@ export async function getMaintenanceStatus(): Promise<MaintenanceStatusResponse>
         console.error("Failed to fetch maintenance status:", error);
         return DEFAULT_STATUS;
     }
+}
+
+export function getMaintenanceStatus(): Promise<MaintenanceStatusResponse> {
+    return fetchMaintenanceStatus(getMaintenanceStatusUrl());
 }
