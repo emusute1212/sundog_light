@@ -55,6 +55,17 @@ const rules = [
         matches: (line) => /\bX-[A-Za-z0-9-]{3,}\b/.test(line),
     },
     {
+        id: "wire-format",
+        description: "concrete external wire format",
+        matches: (line) =>
+            /(?:外部契約|通信契約|wire\s*format).{0,80}(?:\b\d+-?bit\b|整数|integer|#RRGGBB)/i.test(
+                line,
+            ) ||
+            /(?:\b\d+-?bit\b|整数|integer|#RRGGBB).{0,80}(?:外部契約|通信契約|wire\s*format)/i.test(
+                line,
+            ),
+    },
+    {
         id: "security-response",
         description: "access-control response behavior",
         matches: (line) =>
