@@ -1,7 +1,4 @@
-import {
-    getMaintenanceMessage,
-    isMaintenanceModeEnabled,
-} from "@/lib/maintenance";
+import { getMaintenanceStatus } from "@/lib/maintenance";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -16,12 +13,12 @@ export const metadata: Metadata = {
     },
 };
 
-export default function MaintenancePage() {
-    if (!isMaintenanceModeEnabled()) {
+export default async function MaintenancePage() {
+    const { maintenanceStatus } = await getMaintenanceStatus();
+
+    if (!maintenanceStatus.enabled) {
         redirect("/");
     }
-
-    const message = getMaintenanceMessage();
 
     return (
         <div className="flex min-h-screen flex-col items-center bg-white text-black font-sans">
@@ -45,17 +42,17 @@ export default function MaintenancePage() {
                     ただいまメンテナンス中です
                 </h2>
                 <p className="mt-6 text-base leading-8 text-gray-700">
-                    {message}
+                    {maintenanceStatus.message}
                 </p>
                 <p className="mt-4 text-sm leading-7 text-gray-500">
                     作業中はイベントの作成、編集、色の変更、参加者画面への接続を一時停止しています。
                 </p>
 
                 <a
-                    href="/"
+                    href="/maintenance"
                     className="mt-10 inline-flex rounded-2xl bg-black px-8 py-3 font-semibold text-white shadow-lg transition hover:scale-105"
                 >
-                    再読み込みする
+                    状態を確認する
                 </a>
             </main>
         </div>

@@ -12,6 +12,8 @@ const unsafeExamples = [
     ["environment-control", "APPLICATION_MODE=true"],
     ["sensitive-identifier", "APPLICATION_SECRET"],
     ["internal-header", "X-Internal-Mode"],
+    ["wire-format", "外部契約では24-bit整数を送信します"],
+    ["data-structure-field", "`clientPageUrl`: 参加者向けURL"],
     ["security-response", "401 responses redirect to another page"],
     ["personal-path", "/Users/example/project/spec.json"],
     ["deployment-url", "https://sample.vercel.app"],
@@ -20,6 +22,19 @@ const unsafeExamples = [
 
 for (const [ruleId, content] of unsafeExamples) {
     test(`detects ${ruleId}`, () => {
+        const violations = findPublicDocumentationViolations(content);
+        assert.ok(violations.some((violation) => violation.ruleId === ruleId));
+    });
+}
+
+const unsafeVariants = [
+    ["wire-format", "hyphenated wire format", "wire-format uses a 24-bit integer"],
+    ["data-structure-field", "custom typed field", "eventColor: EventColor"],
+    ["data-structure-field", "bullet typed field", "- eventId: EventId"],
+];
+
+for (const [ruleId, label, content] of unsafeVariants) {
+    test(`detects ${label}`, () => {
         const violations = findPublicDocumentationViolations(content);
         assert.ok(violations.some((violation) => violation.ruleId === ruleId));
     });

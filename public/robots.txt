@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://sundog-light.vercel.app/sitemap.xml 

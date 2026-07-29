@@ -1,4 +1,6 @@
 "use client";
+import { fetchEventDetail } from "@/features/event/api/event-client";
+import { toCoreError } from "@/features/event/lib/to-core-error";
 import { useEffect, useState } from "react";
 import { EventDetail } from "@/features/event/types/event-detail";
 import EventEditSection from "@/features/event/components/edit/section/EventEditSection";
@@ -18,31 +20,16 @@ export default function EventEditPage() {
         if (eventUuid === undefined) return;
         const callApi = async () => {
             try {
-                const response = await fetch(`/api/event/${eventUuid}`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                if (!response.ok) {
-                    setError({
-                        errorCode: response.status,
-                        errorMessage: response.statusText,
-                    });
-                } else {
-                    setError(null);
-                    setEventDetail(
-                        JSON.parse(await response.json()).result as EventDetail
-                    );
-                }
+                setEventDetail(await fetchEventDetail(eventUuid));
+                setError(null);
             } catch (error) {
-                console.error("イベント一覧の取得に失敗しました:", error);
+                setError(toCoreError(error));
             } finally {
                 setIsLoading(false);
             }
         };
-        callApi();
+
+        void callApi();
     }, [eventUuid]);
 
     if (isLoading) {

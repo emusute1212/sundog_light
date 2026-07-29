@@ -1,18 +1,15 @@
-import {
-    getMaintenanceNoticeMessage,
-    isMaintenanceNoticeVisible,
-} from "@/lib/maintenance";
+import type { MaintenanceNoticeStatus } from "@/lib/maintenance";
 
 export default function MaintenanceNoticeBanner({
+    notice,
     maxWidthClassName = "max-w-5xl",
 }: {
+    notice: MaintenanceNoticeStatus;
     maxWidthClassName?: string;
 }) {
-    if (!isMaintenanceNoticeVisible()) {
+    if (!notice.enabled) {
         return null;
     }
-
-    const message = getMaintenanceNoticeMessage();
 
     return (
         <aside
@@ -25,7 +22,7 @@ export default function MaintenanceNoticeBanner({
             >
                 <span className="text-xs font-bold">メンテナンス予定</span>
                 <span className="text-sm leading-6 text-gray-700">
-                    {message}
+                    {notice.message}
                 </span>
             </div>
         </aside>

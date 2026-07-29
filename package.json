@@ -8,18 +8,12 @@
     "build": "next build",
     "start": "next start",
     "check:public-docs": "node --test scripts/public-docs-policy.verify.mjs && node scripts/check-public-docs.mjs",
-    "lint": "pnpm check:public-docs && next lint"
+    "lint": "pnpm check:public-docs && eslint .",
+    "test": "pnpm check:public-docs && vitest run"
   },
   "dependencies": {
-    "@auth/upstash-redis-adapter": "^2.7.4",
-    "@types/crypto-js": "^4.2.2",
-    "@upstash/redis": "^1.34.4",
     "lucide-react": "^0.475.0",
-    "mongodb": "^6.16.0",
     "next": "16.0.7",
-    "next-auth": "5.0.0-beta.25",
-    "pusher": "^5.2.0",
-    "pusher-js": "^8.4.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.1",
     "react-colorful": "^5.6.1",
@@ -27,14 +21,18 @@
     "react-hot-toast": "^2.5.2"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
-    "@types/node": "^20.17.16",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^20.19.43",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "eslint": "^9.19.0",
     "eslint-config-next": "16.0.7",
+    "jsdom": "^26.1.0",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vite": "^6.4.1",
+    "vitest": "^3.2.7"
   }
 }

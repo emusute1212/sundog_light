@@ -10,8 +10,7 @@ SUNDOG Light は、参加者のスマートフォン画面をイベント用ラ�
 
 - ホストはイベントを管理する。参加者は共有された `/client/{eventUuid}` URLから、できるだけ少ない手間で参加できるべき。
 - 参加者側の中心体験はライト画面だけ。状態は「接続中」「色が未選択」「選択色の全画面表示」。
-- イベント色は `#RRGGBB` 形式のhex文字列。イベント作成・編集では最低1色が必要。
-- 選択色の `null` は「現在色が選択されていない」状態。同じ色をもう一度選ぶと `null` に戻すトグル挙動。
+- イベント色はフロントエンドで `#RRGGBB` として扱い、外部境界では既存の変換処理を再利用する。
 - ホストの色操作は、接続中の参加者画面へリアルタイムに反映する。
 - 1回だけ使う参加者にも扱いやすくする。明示的な方針変更がない限り、参加者アカウント作成は追加しない。
 
@@ -26,36 +25,25 @@ SUNDOG Light は、参加者のスマートフォン画面をイベント用ラ�
 - `/client/[key]` - 参加者ライト画面。`key` はイベントUUID。
 - `/maintenance` - メンテナンスモード画面。
 
-## 主要なイベント型
-
-主要なイベント型は `EventDetail`:
-
-```ts
-{
-  name: string;
-  colors: string[];
-  uuid: string;
-  lastSelectedColor?: string | null;
-}
-```
-
 ## 開発コマンド
 
-- 依存関係は `pnpm install` で入れる。`preinstall` で pnpm が強制される。
+- 依存関係は `pnpm install` で入れる。`preinstall` でpnpmが強制される。
 - ローカル起動は `pnpm dev`。
 - ビルドは `pnpm build`。
 - Lintは `pnpm lint`。
 
 ## 設定
 
+- `APP_PUBLIC_ORIGIN` - canonical origin。OGP、sitemap、robots、legacy host redirectに利用する。productionでは明示設定する。
+- `APP_LEGACY_HOSTS` - `APP_PUBLIC_ORIGIN`へ恒久redirectする旧hostnameのカンマ区切り。schemeとpathは含めない。
 - `NEXT_PUBLIC_GA_MEASUREMENT_ID` - 任意のGoogle Analytics ID。
 - その他の設定項目と例は `.env.example` を参照し、実値はGit管理外で扱う。
 
 ## 実装ガイド
 
-- ホスト専用操作と参加者アクセスの分離を守る。アクセス制御を触るときは、意図した公開参加フローが維持されているか確認する。
+- ホスト専用操作と参加者アクセスの分離を守る。認証を触るときは、公開参加フローが維持されているか確認する。
+- API契約を変更するときは、最新のOpenAPI契約とサーバー実装を確認し、関連するAPI clientをまとめて更新する。
 - リアルタイム色変更を触る場合は、ホストと参加者の送受信処理およびメッセージ形状をまとめて確認する。
-- APIレスポンス形状を変える場合は、一部クライアントが `Response.json` に包まれたJSON文字列を `JSON.parse(await response.json())` している点も同時に移行する。
 - ホスト画面はモバイルファーストで、既存の白・黒・スカイブルー・色スウォッチ中心のシンプルなUIに合わせる。
 - 直接的で小さなコンポーネントを `src/features/event/components/...` 配下に置き、共有イベント型は `src/features/event/types/...` に置く。
 - イベント寿命は現状ホストによる手動削除。自動期限切れは将来案であり、現在の挙動ではない。
