@@ -54,7 +54,9 @@ describe("HostShell", () => {
 
         vi.mocked(useAuth).mockReturnValue({
             isReady: true,
+            retrySession: vi.fn(),
             session: { user: { id: "user-id" } },
+            sessionError: null,
             logout,
         });
 
@@ -73,7 +75,9 @@ describe("HostShell", () => {
         currentPathname.value = "/login";
         vi.mocked(useAuth).mockReturnValue({
             isReady: true,
+            retrySession: vi.fn(),
             session: null,
+            sessionError: null,
             logout,
         });
         view.rerender(
@@ -116,7 +120,9 @@ describe("HostShell", () => {
 
         vi.mocked(useAuth).mockReturnValue({
             isReady: true,
+            retrySession: vi.fn(),
             session: { user: { id: "user-id" } },
+            sessionError: null,
             logout,
         });
 
@@ -148,5 +154,32 @@ describe("HostShell", () => {
         });
         expect(childMounted).toHaveBeenCalledTimes(2);
         expect(toastError).toHaveBeenCalledOnce();
+    });
+
+    it("shows a retry action instead of redirecting after session lookup failure", () => {
+        const retrySession = vi.fn();
+
+        vi.mocked(useAuth).mockReturnValue({
+            isReady: true,
+            retrySession,
+            session: null,
+            sessionError: "ログイン状態を確認できませんでした。",
+            logout: vi.fn(),
+        });
+
+        render(
+            <HostShell notice={{ enabled: false, message: "" }}>
+                <div>protected page</div>
+            </HostShell>
+        );
+
+        expect(
+            screen.getByText("ログイン状態を確認できませんでした。")
+        ).toBeInTheDocument();
+        expect(routerReplace).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByRole("button", { name: "再試行" }));
+
+        expect(retrySession).toHaveBeenCalledOnce();
     });
 });

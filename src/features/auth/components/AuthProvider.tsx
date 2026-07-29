@@ -1,21 +1,38 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useState,
+} from "react";
 import { fetchAuthSession, logoutSession } from "../api/auth-client";
 import { runBeforeLogoutCleanups } from "../lib/logout-lifecycle";
 import { AuthSession } from "../types/auth-session";
 
 type AuthContextValue = {
     isReady: boolean;
+    retrySession: () => void;
     session: AuthSession | null;
+    sessionError: string | null;
     logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const SESSION_RESTORE_ERROR_MESSAGE =
+    "ログイン状態を確認できませんでした。通信状況を確認して再試行してください。";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [session, setSession] = useState<AuthSession | null>(null);
     const [isReady, setIsReady] = useState(false);
+    const [sessionError, setSessionError] = useState<string | null>(null);
+    const [restoreVersion, setRestoreVersion] = useState(0);
+    const retrySession = useCallback(() => {
+        setIsReady(false);
+        setSessionError(null);
+        setRestoreVersion((current) => current + 1);
+    }, []);
 
     useEffect(() => {
         let isCancelled = false;
@@ -31,13 +48,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .then((nextSession) => {
                 if (!isCancelled) {
                     setSession(nextSession);
+                    setSessionError(null);
                 }
             })
             .catch((error) => {
                 console.error("Failed to restore auth session:", error);
 
                 if (!isCancelled) {
-                    setSession(null);
+                    setSessionError(SESSION_RESTORE_ERROR_MESSAGE);
                 }
             })
             .finally(() => {
@@ -49,17 +67,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => {
             isCancelled = true;
         };
-    }, []);
+    }, [restoreVersion]);
 
     return (
         <AuthContext.Provider
             value={{
                 isReady,
+                retrySession,
                 session,
+                sessionError,
                 logout: async () => {
                     runBeforeLogoutCleanups();
                     await logoutSession();
                     setSession(null);
+                    setSessionError(null);
                 },
             }}
         >

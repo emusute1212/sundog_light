@@ -6,6 +6,7 @@ import { consumePostLoginPath } from "@/features/auth/lib/post-login-redirect";
 import type { AuthSession } from "@/features/auth/types/auth-session";
 import { getDisplayErrorMessage } from "@/lib/api-client";
 import type { MaintenanceNoticeStatus } from "@/lib/maintenance";
+import { RefreshCw } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
@@ -24,6 +25,31 @@ function FullScreenLoader() {
     );
 }
 
+function SessionError({
+    message,
+    onRetry,
+}: {
+    message: string;
+    onRetry: () => void;
+}) {
+    return (
+        <div
+            className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-8 text-center"
+            role="alert"
+        >
+            <p className="text-red-700">{message}</p>
+            <button
+                className="inline-flex items-center gap-2 rounded-lg border border-black bg-white px-4 py-2 text-black transition-colors hover:bg-gray-100"
+                onClick={onRetry}
+                type="button"
+            >
+                <RefreshCw size={18} />
+                再試行
+            </button>
+        </div>
+    );
+}
+
 export default function HostShell({
     children,
     notice,
@@ -31,7 +57,13 @@ export default function HostShell({
     children: React.ReactNode;
     notice: MaintenanceNoticeStatus;
 }) {
-    const { isReady, logout, session } = useAuth();
+    const {
+        isReady,
+        logout,
+        retrySession,
+        session,
+        sessionError,
+    } = useAuth();
     const pathname = usePathname();
     const router = useRouter();
     const [logoutAttempt, setLogoutAttempt] = useState<LogoutAttempt | null>(
@@ -48,10 +80,21 @@ export default function HostShell({
             isSameLogoutSession &&
             !isLoginPage);
     const shouldRedirectToLogin =
-        isReady && !isLoginPage && session == null && !isLoggingOut;
-    const shouldRedirectToEventList = isReady && isLoginPage && session != null;
+        isReady &&
+        sessionError == null &&
+        !isLoginPage &&
+        session == null &&
+        !isLoggingOut;
+    const shouldRedirectToEventList =
+        isReady &&
+        sessionError == null &&
+        isLoginPage &&
+        session != null;
     const shouldRestorePostLoginPath =
-        isReady && pathname === "/event/list" && session != null;
+        isReady &&
+        sessionError == null &&
+        pathname === "/event/list" &&
+        session != null;
 
     useEffect(() => {
         if (shouldRedirectToLogin) {
@@ -140,9 +183,16 @@ export default function HostShell({
                 {!isReady ||
                 isLoggingOut ||
                 shouldRedirectToLogin ||
-                shouldRedirectToEventList
-                    ? <FullScreenLoader />
-                    : children}
+                shouldRedirectToEventList ? (
+                    <FullScreenLoader />
+                ) : sessionError ? (
+                    <SessionError
+                        message={sessionError}
+                        onRetry={retrySession}
+                    />
+                ) : (
+                    children
+                )}
             </main>
             <Toaster position="top-center" />
         </div>
