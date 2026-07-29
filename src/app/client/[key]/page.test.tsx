@@ -1,5 +1,10 @@
 import { act, render, screen } from "@testing-library/react";
+import { fireEvent } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+    COLOR_SOCKET_SCRIPT_ERROR_MESSAGE,
+    SOCKJS_SCRIPT_SRC,
+} from "@/features/event/lib/use-color-socket-scripts";
 import ClientPage from "./page";
 
 type SocketCallbacks = {
@@ -13,10 +18,16 @@ const {
     connectColorSocketMock,
     currentEventId,
     fetchPublicCurrentColorMock,
+    gtagEventMock,
+    scriptPropsBySrc,
+    socketLibrariesAvailable,
 } = vi.hoisted(() => ({
     connectColorSocketMock: vi.fn(),
     currentEventId: { value: "event-id" },
     fetchPublicCurrentColorMock: vi.fn(),
+    gtagEventMock: vi.fn(),
+    scriptPropsBySrc: new Map<string, unknown>(),
+    socketLibrariesAvailable: { value: true },
 }));
 
 vi.mock("next/navigation", () => ({
@@ -24,7 +35,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/script", () => ({
-    default: () => null,
+    default: (props: { src: string }) => {
+        scriptPropsBySrc.set(props.src, props);
+        return null;
+    },
 }));
 
 vi.mock("@/features/event/api/event-client", () => ({
@@ -32,8 +46,12 @@ vi.mock("@/features/event/api/event-client", () => ({
 }));
 
 vi.mock("@/features/event/lib/color-websocket", () => ({
-    hasColorSocketLibraries: () => true,
+    hasColorSocketLibraries: () => socketLibrariesAvailable.value,
     connectColorSocket: connectColorSocketMock,
+}));
+
+vi.mock("@/libs/gtag", () => ({
+    event: gtagEventMock,
 }));
 
 describe("ClientPage WebSocket reconnection", () => {
@@ -45,6 +63,9 @@ describe("ClientPage WebSocket reconnection", () => {
         callbacks.length = 0;
         disconnects.length = 0;
         currentEventId.value = "event-id";
+        gtagEventMock.mockReset();
+        scriptPropsBySrc.clear();
+        socketLibrariesAvailable.value = true;
         fetchPublicCurrentColorMock.mockResolvedValue("#112233");
         connectColorSocketMock.mockImplementation(
             (options: SocketCallbacks) => {
@@ -101,6 +122,63 @@ describe("ClientPage WebSocket reconnection", () => {
         });
 
         expect(screen.queryByText("再接続中...")).not.toBeInTheDocument();
+        expect(gtagEventMock).toHaveBeenCalledWith({
+            action: "client_connect",
+            category: "client_engagement",
+            label: "event-id",
+        });
+        expect(gtagEventMock).toHaveBeenCalledWith({
+            action: "color_received",
+            category: "client_engagement",
+            label: "event-id",
+        });
+        view.unmount();
+    });
+
+    it("keeps a live color received before the initial request completes", async () => {
+        let resolveInitialColor: (color: string | null) => void = () => undefined;
+        fetchPublicCurrentColorMock.mockReturnValue(
+            new Promise((resolve) => {
+                resolveInitialColor = resolve;
+            })
+        );
+        const view = render(<ClientPage />);
+
+        act(() => {
+            callbacks[0].onColorChanged("#445566");
+        });
+        await act(async () => {
+            resolveInitialColor("#112233");
+        });
+
+        expect(view.container.querySelector("div[style]")).toHaveStyle({
+            backgroundColor: "#445566",
+        });
+        view.unmount();
+    });
+
+    it("keeps the live color when the older initial request fails", async () => {
+        let rejectInitialColor: (reason: unknown) => void = () => undefined;
+        fetchPublicCurrentColorMock.mockReturnValue(
+            new Promise((_resolve, reject) => {
+                rejectInitialColor = reject;
+            })
+        );
+        const view = render(<ClientPage />);
+
+        act(() => {
+            callbacks[0].onColorChanged("#445566");
+        });
+        await act(async () => {
+            rejectInitialColor(new Error("initial request failed"));
+        });
+
+        expect(view.container.querySelector("div[style]")).toHaveStyle({
+            backgroundColor: "#445566",
+        });
+        expect(
+            screen.queryByText("initial request failed")
+        ).not.toBeInTheDocument();
         view.unmount();
     });
 
@@ -207,6 +285,54 @@ describe("ClientPage WebSocket reconnection", () => {
 
         expect(screen.getByText(message)).toBeInTheDocument();
         expect(connectColorSocketMock).toHaveBeenCalledTimes(4);
+
+        fireEvent.click(screen.getByRole("button", { name: "再試行" }));
+
+        expect(connectColorSocketMock).toHaveBeenCalledTimes(5);
+        expect(screen.queryByText(message)).not.toBeInTheDocument();
+        view.unmount();
+    });
+
+    it("surfaces a socket script load failure", async () => {
+        socketLibrariesAvailable.value = false;
+        const view = render(<ClientPage />);
+
+        await act(async () => {
+            await Promise.resolve();
+        });
+
+        const sockJsScript = scriptPropsBySrc.get(SOCKJS_SCRIPT_SRC) as {
+            onError?: () => void;
+        };
+
+        act(() => {
+            sockJsScript.onError?.();
+        });
+
+        expect(
+            screen.getByText(COLOR_SOCKET_SCRIPT_ERROR_MESSAGE)
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "再試行" })
+        ).toBeInTheDocument();
+        expect(connectColorSocketMock).not.toHaveBeenCalled();
+        view.unmount();
+    });
+
+    it("times out while waiting for socket scripts", async () => {
+        socketLibrariesAvailable.value = false;
+        const view = render(<ClientPage />);
+
+        await act(async () => {
+            await Promise.resolve();
+        });
+        act(() => {
+            vi.advanceTimersByTime(10_000);
+        });
+
+        expect(
+            screen.getByText(COLOR_SOCKET_SCRIPT_ERROR_MESSAGE)
+        ).toBeInTheDocument();
         view.unmount();
     });
 

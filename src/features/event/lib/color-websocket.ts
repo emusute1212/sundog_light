@@ -1,4 +1,5 @@
 import { hexColorToInt, intColorToHex } from "@/lib/color";
+import { EventSendableColor } from "../types/event-sendable-color";
 
 type SockJsSocket = {
     close: () => void;
@@ -60,7 +61,7 @@ type ConnectColorSocketOptions = {
 
 export type ColorSocketConnection = {
     disconnect: () => void;
-    sendColor: (color: string) => void;
+    sendColor: (message: EventSendableColor) => void;
 };
 
 function resolveColor(message: ColorTopicMessage) {
@@ -178,7 +179,7 @@ export function connectColorSocket({
                 closeRawSocket();
             }
         },
-        sendColor: (color: string) => {
+        sendColor: ({ color }: EventSendableColor) => {
             if (isDisposed || !client.connected) {
                 throw new Error("Color WebSocket is not connected.");
             }
@@ -188,7 +189,7 @@ export function connectColorSocket({
                 {},
                 JSON.stringify({
                     eventId,
-                    color: hexColorToInt(color),
+                    color: color == null ? null : hexColorToInt(color),
                 })
             );
         },

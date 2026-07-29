@@ -3,9 +3,15 @@ import { fetchPublicCurrentColor } from "@/features/event/api/event-client";
 import {
     ColorSocketConnection,
     connectColorSocket,
-    hasColorSocketLibraries,
 } from "@/features/event/lib/color-websocket";
+import {
+    SOCKJS_SCRIPT_SRC,
+    STOMP_SCRIPT_SRC,
+    useColorSocketScripts,
+} from "@/features/event/lib/use-color-socket-scripts";
 import { getDisplayErrorMessage } from "@/lib/api-client";
+import { event as gtagEvent } from "@/libs/gtag";
+import { RefreshCw } from "lucide-react";
 import { useParams } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
@@ -24,48 +30,45 @@ function ClientLightPage({ eventId }: { eventId: string }) {
     const [backgroundColor, setBackgroundColor] = useState<string | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [isInitialColorLoading, setIsInitialColorLoading] = useState(true);
-    const [loadedSocketScriptCount, setLoadedSocketScriptCount] = useState(() =>
-        hasColorSocketLibraries() ? 2 : 0
-    );
     const [initialColorError, setInitialColorError] = useState<string | null>(
         null
     );
     const [socketError, setSocketError] = useState<string | null>(null);
+    const [initialColorRequestVersion, setInitialColorRequestVersion] =
+        useState(0);
+    const [socketRetryVersion, setSocketRetryVersion] = useState(0);
     const socketConnectionRef = useRef<ColorSocketConnection | null>(null);
     const reconnectTimerRef = useRef<number | null>(null);
     const reconnectAttemptRef = useRef(0);
-    const isSocketReady = loadedSocketScriptCount >= 2;
+    const hasReceivedSocketColorRef = useRef(false);
+    const {
+        isReady: isSocketReady,
+        onScriptError,
+        onScriptReady,
+        scriptError: socketScriptError,
+    } = useColorSocketScripts();
     const socketScripts = (
         <>
             <Script
-                src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"
+                src={SOCKJS_SCRIPT_SRC}
                 strategy="afterInteractive"
-                onLoad={() =>
-                    setLoadedSocketScriptCount((current) =>
-                        Math.min(current + 1, 2)
-                    )
-                }
+                onLoad={() => onScriptReady("sockjs")}
+                onReady={() => onScriptReady("sockjs")}
+                onError={onScriptError}
             />
             <Script
-                src="https://cdn.jsdelivr.net/npm/stompjs@2/lib/stomp.min.js"
+                src={STOMP_SCRIPT_SRC}
                 strategy="afterInteractive"
-                onLoad={() =>
-                    setLoadedSocketScriptCount((current) =>
-                        Math.min(current + 1, 2)
-                    )
-                }
+                onLoad={() => onScriptReady("stomp")}
+                onReady={() => onScriptReady("stomp")}
+                onError={onScriptError}
             />
         </>
     );
 
     useEffect(() => {
-        if (hasColorSocketLibraries()) {
-            setLoadedSocketScriptCount(2);
-        }
-    }, []);
-
-    useEffect(() => {
         let isActive = true;
+        setIsInitialColorLoading(true);
 
         const loadCurrentColor = async () => {
             try {
@@ -75,14 +78,24 @@ function ClientLightPage({ eventId }: { eventId: string }) {
                     return;
                 }
 
-                setBackgroundColor(color);
+                if (!hasReceivedSocketColorRef.current) {
+                    setBackgroundColor(color);
+                }
+
                 setInitialColorError(null);
+                gtagEvent({
+                    action: "client_connect",
+                    category: "client_engagement",
+                    label: eventId,
+                });
             } catch (error) {
                 if (!isActive) {
                     return;
                 }
 
-                setInitialColorError(getDisplayErrorMessage(error));
+                if (!hasReceivedSocketColorRef.current) {
+                    setInitialColorError(getDisplayErrorMessage(error));
+                }
             } finally {
                 if (isActive) {
                     setIsInitialColorLoading(false);
@@ -95,7 +108,7 @@ function ClientLightPage({ eventId }: { eventId: string }) {
         return () => {
             isActive = false;
         };
-    }, [eventId]);
+    }, [eventId, initialColorRequestVersion]);
 
     useEffect(() => {
         if (!isSocketReady) {
@@ -184,8 +197,14 @@ function ClientLightPage({ eventId }: { eventId: string }) {
                             return;
                         }
 
+                        hasReceivedSocketColorRef.current = true;
                         setBackgroundColor(color);
                         setInitialColorError(null);
+                        gtagEvent({
+                            action: "color_received",
+                            category: "client_engagement",
+                            label: eventId,
+                        });
                     },
                     onError: (message) => {
                         handleConnectionFailure(message, generation);
@@ -215,16 +234,46 @@ function ClientLightPage({ eventId }: { eventId: string }) {
             clearReconnectTimer();
             disconnectCurrent();
         };
-    }, [eventId, isSocketReady]);
+    }, [eventId, isSocketReady, socketRetryVersion]);
 
-    const fatalError = initialColorError ?? socketError;
+    const fatalError =
+        initialColorError ?? socketScriptError ?? socketError;
+
+    const retry = () => {
+        if (initialColorError) {
+            setInitialColorError(null);
+            setIsInitialColorLoading(true);
+            setInitialColorRequestVersion((current) => current + 1);
+            return;
+        }
+
+        if (socketScriptError) {
+            window.location.reload();
+            return;
+        }
+
+        reconnectAttemptRef.current = 0;
+        setSocketError(null);
+        setSocketRetryVersion((current) => current + 1);
+    };
 
     if (fatalError) {
         return (
             <>
                 {socketScripts}
-                <div className="flex h-screen items-center justify-center bg-gray-100 p-8 text-center text-red-600">
-                    {fatalError}
+                <div
+                    className="flex h-screen flex-col items-center justify-center gap-4 bg-gray-100 p-8 text-center"
+                    role="alert"
+                >
+                    <p className="text-red-700">{fatalError}</p>
+                    <button
+                        className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white transition-colors hover:bg-gray-800"
+                        onClick={retry}
+                        type="button"
+                    >
+                        <RefreshCw size={18} />
+                        再試行
+                    </button>
                 </div>
             </>
         );

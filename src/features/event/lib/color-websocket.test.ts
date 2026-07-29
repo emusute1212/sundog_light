@@ -136,4 +136,38 @@ describe("connectColorSocket", () => {
         expect(onColorChanged).not.toHaveBeenCalled();
         expect(onError).not.toHaveBeenCalled();
     });
+
+    it("sends selected colors and deselection as the socket payload", () => {
+        const connection = connectColorSocket({
+            eventId: "event-id",
+            onConnected: vi.fn(),
+            onColorChanged: vi.fn(),
+            onError: vi.fn(),
+        });
+
+        client.connected = true;
+        connectSuccess?.("CONNECTED");
+
+        connection.sendColor({ color: "#112233" });
+        connection.sendColor({ color: null });
+
+        expect(client.send).toHaveBeenNthCalledWith(
+            1,
+            "/app/event/event-id/color",
+            {},
+            JSON.stringify({
+                eventId: "event-id",
+                color: 0x112233,
+            })
+        );
+        expect(client.send).toHaveBeenNthCalledWith(
+            2,
+            "/app/event/event-id/color",
+            {},
+            JSON.stringify({
+                eventId: "event-id",
+                color: null,
+            })
+        );
+    });
 });

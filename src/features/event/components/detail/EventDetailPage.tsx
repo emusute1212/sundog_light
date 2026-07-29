@@ -5,8 +5,12 @@ import EventDetailSection from "@/features/event/components/detail/section/Event
 import {
     connectColorSocket,
     ColorSocketConnection,
-    hasColorSocketLibraries,
 } from "@/features/event/lib/color-websocket";
+import {
+    SOCKJS_SCRIPT_SRC,
+    STOMP_SCRIPT_SRC,
+    useColorSocketScripts,
+} from "@/features/event/lib/use-color-socket-scripts";
 import { useParams } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
@@ -18,6 +22,10 @@ import CoreErrorComponent from "../core/CoreErrorComponent";
 import { LoadingDialog } from "../core/LoadingDialog";
 import { toCoreError } from "../../lib/to-core-error";
 import toast from "react-hot-toast";
+import { RefreshCw } from "lucide-react";
+
+const MAX_RECONNECT_ATTEMPTS = 3;
+const RECONNECT_BASE_DELAY_MS = 1000;
 
 export default function EventDetailPage() {
     const params = useParams();
@@ -27,41 +35,65 @@ export default function EventDetailPage() {
     const [error, setError] = useState<CoreError | null>(null);
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
     const [isColorChanging, setIsColorChanging] = useState(false);
-    const [loadedSocketScriptCount, setLoadedSocketScriptCount] = useState(() =>
-        hasColorSocketLibraries() ? 2 : 0
-    );
     const [isSocketConnected, setIsSocketConnected] = useState(false);
+    const [socketError, setSocketError] = useState<string | null>(null);
+    const [socketRetryVersion, setSocketRetryVersion] = useState(0);
     const socketConnectionRef = useRef<ColorSocketConnection | null>(null);
     const colorChangeTimeoutRef = useRef<number | null>(null);
-    const isSocketReady = loadedSocketScriptCount >= 2;
+    const reconnectTimerRef = useRef<number | null>(null);
+    const reconnectAttemptRef = useRef(0);
+    const hasReceivedSocketColorRef = useRef(false);
+    const {
+        isReady: isSocketReady,
+        onScriptError,
+        onScriptReady,
+        scriptError,
+    } = useColorSocketScripts();
 
     useEffect(() => {
+        let isActive = true;
+        hasReceivedSocketColorRef.current = false;
+        setIsLoading(true);
+
         const callApi = async () => {
             try {
                 const data = await fetchEventDetail(eventUuid);
+
+                if (!isActive) {
+                    return;
+                }
+
                 setError(null);
                 setEventDetail(data);
-                setSelectedColor(data.currentColor ?? null);
+
+                if (!hasReceivedSocketColorRef.current) {
+                    setSelectedColor(data.currentColor ?? null);
+                }
             } catch (error) {
-                setError(toCoreError(error));
+                if (isActive) {
+                    setError(toCoreError(error));
+                }
             } finally {
-                setIsLoading(false);
+                if (isActive) {
+                    setIsLoading(false);
+                }
             }
         };
 
         void callApi();
-    }, [eventUuid]);
 
-    useEffect(() => {
-        if (hasColorSocketLibraries()) {
-            setLoadedSocketScriptCount(2);
-        }
-    }, []);
+        return () => {
+            isActive = false;
+        };
+    }, [eventUuid]);
 
     useEffect(() => {
         if (!isSocketReady) {
             return;
         }
+
+        let isActive = true;
+        let connectionGeneration = 0;
 
         const clearColorChangeTimeout = () => {
             if (colorChangeTimeoutRef.current != null) {
@@ -70,53 +102,134 @@ export default function EventDetailPage() {
             }
         };
 
-        try {
-            const connection = connectColorSocket({
-                eventId: eventUuid,
-                onConnected: () => {
-                    setIsSocketConnected(true);
-                },
-                onColorChanged: (color) => {
-                    clearColorChangeTimeout();
-                    setSelectedColor(color);
-                    setIsColorChanging(false);
-                },
-                onError: (message) => {
-                    clearColorChangeTimeout();
-                    setIsSocketConnected(false);
-                    setIsColorChanging(false);
-                    toast.error(message);
-                },
-            });
+        const clearReconnectTimer = () => {
+            if (reconnectTimerRef.current != null) {
+                window.clearTimeout(reconnectTimerRef.current);
+                reconnectTimerRef.current = null;
+            }
+        };
 
-            socketConnectionRef.current = connection;
+        const disconnectCurrent = () => {
+            connectionGeneration += 1;
+            socketConnectionRef.current?.disconnect();
+            socketConnectionRef.current = null;
+        };
 
-            const disconnectConnection = () => {
-                clearColorChangeTimeout();
-                connection.disconnect();
+        const scheduleReconnect = (message: string) => {
+            const attemptIndex = reconnectAttemptRef.current;
 
-                if (socketConnectionRef.current === connection) {
-                    socketConnectionRef.current = null;
+            if (attemptIndex >= MAX_RECONNECT_ATTEMPTS) {
+                setSocketError(message);
+                toast.error(message);
+                return;
+            }
+
+            reconnectAttemptRef.current += 1;
+            clearReconnectTimer();
+            reconnectTimerRef.current = window.setTimeout(() => {
+                reconnectTimerRef.current = null;
+                openConnection();
+            }, RECONNECT_BASE_DELAY_MS * Math.pow(2, attemptIndex));
+        };
+
+        const handleConnectionFailure = (
+            message: string,
+            generation: number
+        ) => {
+            if (!isActive || generation !== connectionGeneration) {
+                return;
+            }
+
+            clearColorChangeTimeout();
+            disconnectCurrent();
+            setIsSocketConnected(false);
+            setIsColorChanging(false);
+            scheduleReconnect(message);
+        };
+
+        function openConnection() {
+            if (!isActive) {
+                return;
+            }
+
+            const generation = ++connectionGeneration;
+
+            try {
+                const connection = connectColorSocket({
+                    eventId: eventUuid,
+                    onConnected: () => {
+                        if (
+                            !isActive ||
+                            generation !== connectionGeneration
+                        ) {
+                            return;
+                        }
+
+                        reconnectAttemptRef.current = 0;
+                        setIsSocketConnected(true);
+                        setSocketError(null);
+                    },
+                    onColorChanged: (color) => {
+                        if (
+                            !isActive ||
+                            generation !== connectionGeneration
+                        ) {
+                            return;
+                        }
+
+                        hasReceivedSocketColorRef.current = true;
+                        clearColorChangeTimeout();
+                        setSelectedColor(color);
+                        setIsColorChanging(false);
+                    },
+                    onError: (message) => {
+                        handleConnectionFailure(message, generation);
+                    },
+                });
+
+                if (!isActive || generation !== connectionGeneration) {
+                    connection.disconnect();
+                    return;
                 }
-            };
 
-            const unregisterBeforeLogout = registerBeforeLogoutCleanup(() => {
-                setIsSocketConnected(false);
-                setIsColorChanging(false);
-                disconnectConnection();
-            });
-
-            return () => {
-                unregisterBeforeLogout();
-                disconnectConnection();
-            };
-        } catch {
-            toast.error("色変更用 WebSocket の初期化に失敗しました。");
-            return;
+                socketConnectionRef.current = connection;
+            } catch {
+                handleConnectionFailure(
+                    "色変更用 WebSocket の初期化に失敗しました。",
+                    generation
+                );
+            }
         }
-    }, [eventUuid, isSocketReady]);
 
-    const onClickColor = async (color: string) => {
+        reconnectAttemptRef.current = 0;
+        setIsSocketConnected(false);
+        openConnection();
+
+        const unregisterBeforeLogout = registerBeforeLogoutCleanup(() => {
+            isActive = false;
+            clearReconnectTimer();
+            clearColorChangeTimeout();
+            setIsSocketConnected(false);
+            setIsColorChanging(false);
+            disconnectCurrent();
+        });
+
+        return () => {
+            isActive = false;
+            unregisterBeforeLogout();
+            clearReconnectTimer();
+            clearColorChangeTimeout();
+            disconnectCurrent();
+        };
+    }, [eventUuid, isSocketReady, socketRetryVersion]);
+
+    const retrySocket = () => {
+        reconnectAttemptRef.current = 0;
+        setSocketError(null);
+        setSocketRetryVersion((current) => current + 1);
+    };
+
+    const onClickColor = (color: string) => {
         if (isColorChanging) return;
         if (!socketConnectionRef.current || !isSocketConnected) {
             toast.error("色変更用の接続を確立中です。");
@@ -127,11 +240,10 @@ export default function EventDetailPage() {
 
         try {
             const eventSendableColor: EventSendableColor = {
-                eventId: eventUuid,
-                color,
+                color: selectedColor === color ? null : color,
             };
 
-            socketConnectionRef.current.sendColor(eventSendableColor.color);
+            socketConnectionRef.current.sendColor(eventSendableColor);
 
             colorChangeTimeoutRef.current = window.setTimeout(() => {
                 setIsColorChanging(false);
@@ -145,41 +257,72 @@ export default function EventDetailPage() {
         }
     };
 
-    if (isLoading) {
-        return <EventDetailSkeleton />;
-    }
-
-    if (error) {
-        return <CoreErrorComponent coreError={error} />;
-    }
-
     return (
         <>
             <Script
-                src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"
+                src={SOCKJS_SCRIPT_SRC}
                 strategy="afterInteractive"
-                onLoad={() =>
-                    setLoadedSocketScriptCount((current) =>
-                        Math.min(current + 1, 2)
-                    )
-                }
+                onLoad={() => onScriptReady("sockjs")}
+                onReady={() => onScriptReady("sockjs")}
+                onError={onScriptError}
             />
             <Script
-                src="https://cdn.jsdelivr.net/npm/stompjs@2/lib/stomp.min.js"
+                src={STOMP_SCRIPT_SRC}
                 strategy="afterInteractive"
-                onLoad={() =>
-                    setLoadedSocketScriptCount((current) =>
-                        Math.min(current + 1, 2)
-                    )
-                }
+                onLoad={() => onScriptReady("stomp")}
+                onReady={() => onScriptReady("stomp")}
+                onError={onScriptError}
             />
-            {isColorChanging && <LoadingDialog message="色を変更中..." />}
-            <EventDetailSection
-                event={eventDetail!}
-                onClickColor={onClickColor}
-                selectedColor={selectedColor}
-                isColorChanging={isColorChanging}
-            />
+            {scriptError ? (
+                <div
+                    className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-8 text-center"
+                    role="alert"
+                >
+                    <p className="text-red-700">{scriptError}</p>
+                    <button
+                        className="inline-flex items-center gap-2 rounded-lg border border-black bg-white px-4 py-2 text-black transition-colors hover:bg-gray-100"
+                        onClick={() => window.location.reload()}
+                        type="button"
+                    >
+                        <RefreshCw size={18} />
+                        再読み込み
+                    </button>
+                </div>
+            ) : isLoading ? (
+                <EventDetailSkeleton />
+            ) : error ? (
+                <CoreErrorComponent coreError={error} />
+            ) : (
+                <>
+                    {isColorChanging && (
+                        <LoadingDialog message="色を変更中..." />
+                    )}
+                    {socketError && (
+                        <div
+                            className="mx-8 mb-4 flex flex-col items-center gap-3 border-y border-red-200 bg-red-50 px-4 py-3 text-center"
+                            role="alert"
+                        >
+                            <p className="text-sm text-red-700">
+                                {socketError}
+                            </p>
+                            <button
+                                className="inline-flex items-center gap-2 rounded-lg border border-black bg-white px-3 py-2 text-sm text-black transition-colors hover:bg-gray-100"
+                                onClick={retrySocket}
+                                type="button"
+                            >
+                                <RefreshCw size={16} />
+                                再接続
+                            </button>
+                        </div>
+                    )}
+                    <EventDetailSection
+                        event={eventDetail!}
+                        onClickColor={onClickColor}
+                        selectedColor={selectedColor}
+                        isColorChanging={isColorChanging}
+                    />
+                </>
+            )}
         </>
     );
 }
