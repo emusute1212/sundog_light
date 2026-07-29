@@ -29,7 +29,7 @@ type PublicCurrentColorResponse = {
 
 function requireString(value: string | undefined, fieldName: string) {
     if (!value) {
-        throw new Error(`${fieldName} is missing in API response.`);
+        throw new Error(`APIレスポンスに ${fieldName} が含まれていません。`);
     }
 
     return value;

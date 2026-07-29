@@ -93,6 +93,7 @@ export async function getMaintenanceStatus(): Promise<MaintenanceStatusResponse>
                 Accept: "application/json",
             },
             cache: "no-store",
+            signal: AbortSignal.timeout(5000),
         });
 
         if (!response.ok) {
