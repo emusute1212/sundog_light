@@ -85,6 +85,16 @@ function getSocketLibraries() {
     };
 }
 
+function resolveColorSocketUrl() {
+    const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+
+    if (!configuredBaseUrl) {
+        return "/ws";
+    }
+
+    return `${configuredBaseUrl.replace(/\/$/, "")}/ws`;
+}
+
 export function connectColorSocket({
     eventId,
     onConnected,
@@ -92,7 +102,7 @@ export function connectColorSocket({
     onError,
 }: ConnectColorSocketOptions): ColorSocketConnection {
     const { SockJS, Stomp } = getSocketLibraries();
-    const socket = new SockJS("/ws");
+    const socket = new SockJS(resolveColorSocketUrl());
     const client = Stomp.over(socket);
     let subscription: StompSubscription | null = null;
     let isDisposed = false;
