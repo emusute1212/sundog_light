@@ -33,6 +33,40 @@ export function resolveBackendBaseUrl(
     return LOCAL_BACKEND_BASE_URL;
 }
 
+export function createBackendRewrites(
+    environment: BackendEnvironment = {
+        NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+        NODE_ENV: process.env.NODE_ENV,
+    }
+) {
+    const backendBaseUrl = resolveBackendBaseUrl(environment);
+    const rewrites = [
+        {
+            source: "/login/google",
+            destination: `${backendBaseUrl}/login/google`,
+        },
+        {
+            source: "/api/:path*",
+            destination: `${backendBaseUrl}/api/:path*`,
+        },
+    ];
+
+    if (!environment.NEXT_PUBLIC_API_BASE_URL?.trim()) {
+        rewrites.push(
+            {
+                source: "/ws",
+                destination: `${backendBaseUrl}/ws`,
+            },
+            {
+                source: "/ws/:path*",
+                destination: `${backendBaseUrl}/ws/:path*`,
+            }
+        );
+    }
+
+    return rewrites;
+}
+
 export function createLegacyRedirects(
     canonicalOrigin: string,
     legacyHosts: string[]
@@ -61,18 +95,7 @@ const nextConfig: NextConfig = {
         return createLegacyRedirects(canonicalOrigin, resolveLegacyHosts());
     },
     async rewrites() {
-        const backendBaseUrl = resolveBackendBaseUrl();
-
-        return [
-            {
-                source: "/login/google",
-                destination: `${backendBaseUrl}/login/google`,
-            },
-            {
-                source: "/api/:path*",
-                destination: `${backendBaseUrl}/api/:path*`,
-            },
-        ];
+        return createBackendRewrites();
     },
 };
 

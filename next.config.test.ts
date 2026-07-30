@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+    createBackendRewrites,
     createLegacyRedirects,
     resolveBackendBaseUrl,
 } from "./next.config";
@@ -26,6 +27,28 @@ describe("resolveBackendBaseUrl", () => {
                 NODE_ENV: "production",
             })
         ).toBe("https://api.example.com");
+    });
+});
+
+describe("createBackendRewrites", () => {
+    it("proxies WebSocket requests only when using the local backend", () => {
+        expect(
+            createBackendRewrites({ NODE_ENV: "development" })
+        ).toContainEqual({
+            source: "/ws/:path*",
+            destination: "http://localhost:8080/ws/:path*",
+        });
+
+        expect(
+            createBackendRewrites({
+                NEXT_PUBLIC_API_BASE_URL: "https://api.example.com",
+                NODE_ENV: "production",
+            })
+        ).not.toContainEqual(
+            expect.objectContaining({
+                source: expect.stringMatching(/^\/ws/),
+            })
+        );
     });
 });
 

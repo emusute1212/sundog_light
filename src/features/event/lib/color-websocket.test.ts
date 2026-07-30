@@ -197,7 +197,7 @@ describe("connectColorSocket", () => {
         expect(socketUrl).toBe("https://api.example.com/ws");
     });
 
-    it("uses the local backend when the API base URL is not configured", () => {
+    it("uses the same-origin proxy when the API base URL is not configured", () => {
         vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "");
 
         connectColorSocket({
@@ -207,6 +207,6 @@ describe("connectColorSocket", () => {
             onError: vi.fn(),
         });
 
-        expect(socketUrl).toBe("http://localhost:8080/ws");
+        expect(socketUrl).toBe("/ws");
     });
 });

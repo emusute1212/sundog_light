@@ -89,8 +89,7 @@ function resolveColorSocketUrl() {
     const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
 
     if (!configuredBaseUrl) {
-        // ローカル開発用
-        return "http://localhost:8080/ws";
+        return "/ws";
     }
 
     return `${configuredBaseUrl.replace(/\/$/, "")}/ws`;
