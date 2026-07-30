@@ -69,16 +69,8 @@ const nextConfig: NextConfig = {
                 destination: `${backendBaseUrl}/login/google`,
             },
             {
-                source: "/ws",
-                destination: `${backendBaseUrl}/ws`,
-            },
-            {
                 source: "/api/:path*",
                 destination: `${backendBaseUrl}/api/:path*`,
-            },
-            {
-                source: "/ws/:path*",
-                destination: `${backendBaseUrl}/ws/:path*`,
             },
         ];
     },

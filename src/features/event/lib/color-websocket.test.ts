@@ -1,4 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from "vitest";
 import { connectColorSocket } from "./color-websocket";
 
 type ConnectSuccess = (frame: string) => void;
@@ -11,6 +18,7 @@ describe("connectColorSocket", () => {
     let messageCallback: MessageCallback | null;
     let rawSocketClose: ReturnType<typeof vi.fn>;
     let unsubscribe: ReturnType<typeof vi.fn>;
+    let socketUrl: string | null;
     let client: {
         connected: boolean;
         debug: (message: string) => void;
@@ -26,6 +34,7 @@ describe("connectColorSocket", () => {
         messageCallback = null;
         rawSocketClose = vi.fn();
         unsubscribe = vi.fn();
+        socketUrl = null;
 
         client = {
             connected: false,
@@ -56,7 +65,7 @@ describe("connectColorSocket", () => {
             close = rawSocketClose;
 
             constructor(url: string) {
-                void url;
+                socketUrl = url;
             }
         }
 
@@ -64,6 +73,10 @@ describe("connectColorSocket", () => {
         window.Stomp = {
             over: () => client,
         };
+    });
+
+    afterEach(() => {
+        vi.unstubAllEnvs();
     });
 
     it("closes a connecting transport and ignores its late error", () => {
@@ -169,5 +182,31 @@ describe("connectColorSocket", () => {
                 color: null,
             })
         );
+    });
+
+    it("connects directly to the configured API WebSocket endpoint", () => {
+        vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://api.example.com/");
+
+        connectColorSocket({
+            eventId: "event-id",
+            onConnected: vi.fn(),
+            onColorChanged: vi.fn(),
+            onError: vi.fn(),
+        });
+
+        expect(socketUrl).toBe("https://api.example.com/ws");
+    });
+
+    it("uses the local backend when the API base URL is not configured", () => {
+        vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "");
+
+        connectColorSocket({
+            eventId: "event-id",
+            onConnected: vi.fn(),
+            onColorChanged: vi.fn(),
+            onError: vi.fn(),
+        });
+
+        expect(socketUrl).toBe("http://localhost:8080/ws");
     });
 });
