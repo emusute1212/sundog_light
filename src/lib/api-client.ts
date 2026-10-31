@@ -6,6 +6,7 @@ type ApiRequestOptions = {
     body?: unknown;
     headers?: HeadersInit;
     requiresAuth?: boolean;
+    signal?: AbortSignal;
 };
 
 type CsrfTokenResponse = {
@@ -125,6 +126,7 @@ export async function apiRequest<T>({
     body,
     headers: headerInit,
     requiresAuth = true,
+    signal,
 }: ApiRequestOptions): Promise<T> {
     const headers = new Headers(headerInit);
 
@@ -140,6 +142,7 @@ export async function apiRequest<T>({
         method,
         headers,
         credentials: "include",
+        signal,
         body: body === undefined ? undefined : JSON.stringify(body),
     });
 

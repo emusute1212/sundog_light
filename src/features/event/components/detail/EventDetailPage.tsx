@@ -28,6 +28,7 @@ import { RefreshCw } from "lucide-react";
 
 const MAX_RECONNECT_ATTEMPTS = 3;
 const RECONNECT_BASE_DELAY_MS = 1000;
+const SESSION_VERIFICATION_TIMEOUT_MS = 5000;
 
 export default function EventDetailPage() {
     const params = useParams();
@@ -99,6 +100,18 @@ export default function EventDetailPage() {
 
         let isActive = true;
         let connectionGeneration = 0;
+        let sessionVerification: AbortController | null = null;
+        let sessionVerificationTimer: number | null = null;
+
+        const clearSessionVerification = () => {
+            const controller = sessionVerification;
+            sessionVerification = null;
+            if (sessionVerificationTimer != null) {
+                window.clearTimeout(sessionVerificationTimer);
+                sessionVerificationTimer = null;
+            }
+            controller?.abort();
+        };
 
         const clearColorChangeTimeout = () => {
             if (colorChangeTimeoutRef.current != null) {
@@ -152,9 +165,29 @@ export default function EventDetailPage() {
             setIsColorChanging(false);
             const failedGeneration = connectionGeneration;
 
-            void fetchAuthSession().then(
+            const controller = new AbortController();
+            sessionVerification = controller;
+            const finishVerification = () => {
+                if (
+                    !isActive ||
+                    failedGeneration !== connectionGeneration ||
+                    sessionVerification !== controller
+                ) {
+                    return false;
+                }
+                clearSessionVerification();
+                return true;
+            };
+            // Abort is best-effort; the watchdog resumes recovery even if fetch stays pending.
+            sessionVerificationTimer = window.setTimeout(() => {
+                if (finishVerification()) {
+                    scheduleReconnect(message);
+                }
+            }, SESSION_VERIFICATION_TIMEOUT_MS);
+
+            void fetchAuthSession(controller.signal).then(
                 (session) => {
-                    if (!isActive || failedGeneration !== connectionGeneration) {
+                    if (!finishVerification()) {
                         return;
                     }
 
@@ -168,7 +201,7 @@ export default function EventDetailPage() {
                     scheduleReconnect(message);
                 },
                 () => {
-                    if (isActive && failedGeneration === connectionGeneration) {
+                    if (finishVerification()) {
                         scheduleReconnect(message);
                     }
                 }
@@ -276,6 +309,7 @@ export default function EventDetailPage() {
 
         const unregisterBeforeLogout = registerBeforeLogoutCleanup(() => {
             isActive = false;
+            clearSessionVerification();
             clearReconnectTimer();
             clearColorChangeTimeout();
             setIsSocketConnected(false);
@@ -286,6 +320,7 @@ export default function EventDetailPage() {
         return () => {
             isActive = false;
             unregisterBeforeLogout();
+            clearSessionVerification();
             clearReconnectTimer();
             clearColorChangeTimeout();
             disconnectCurrent();

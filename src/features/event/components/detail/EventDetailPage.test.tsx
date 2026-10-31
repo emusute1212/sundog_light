@@ -380,6 +380,44 @@ describe("EventDetailPage", () => {
         view.unmount();
     });
 
+    it("bounds a stalled session check and ignores a late unauthorized result", async () => {
+        let resolveSession: (value: null) => void = () => undefined;
+        vi.mocked(fetchAuthSession).mockReturnValue(new Promise((resolve) => {
+            resolveSession = resolve;
+        }));
+        const view = await renderLoadedPage();
+
+        act(() => callbacks[0].onError("socket failed"));
+        const signal = vi.mocked(fetchAuthSession).mock.calls[0][0];
+        expect(signal?.aborted).toBe(false);
+        act(() => vi.advanceTimersByTime(5000));
+        expect(signal?.aborted).toBe(true);
+        // The expired verification must be ignored even before the retry starts.
+        await act(async () => resolveSession(null));
+        act(() => vi.advanceTimersByTime(1000));
+
+        expect(redirectToLogin).not.toHaveBeenCalled();
+        expect(connectColorSocket).toHaveBeenCalledTimes(2);
+        view.unmount();
+    });
+
+    it("reaches manual recovery even when every session check stalls", async () => {
+        vi.mocked(fetchAuthSession).mockReturnValue(new Promise(() => undefined));
+        const view = await renderLoadedPage();
+
+        for (const delay of [1000, 2000, 4000]) {
+            act(() => callbacks.at(-1)!.onError("socket failed"));
+            act(() => vi.advanceTimersByTime(5000 + delay));
+        }
+        act(() => callbacks.at(-1)!.onError("socket failed"));
+        act(() => vi.advanceTimersByTime(5000));
+
+        expect(connectColorSocket).toHaveBeenCalledTimes(4);
+        expect(screen.getByRole("button", { name: "再接続" })).toBeInTheDocument();
+        expect(redirectToLogin).not.toHaveBeenCalled();
+        view.unmount();
+    });
+
     it("verifies a failed connection only once despite repeated error callbacks", async () => {
         let resolveSession: (value: null) => void = () => undefined;
         vi.mocked(fetchAuthSession).mockReturnValue(new Promise((resolve) => {
@@ -406,11 +444,14 @@ describe("EventDetailPage", () => {
         const view = await renderLoadedPage();
 
         act(() => callbacks[0].onError("socket failed"));
+        const signal = vi.mocked(fetchAuthSession).mock.calls[0][0];
+        expect(signal?.aborted).toBe(false);
         if (action === "logout") {
             act(() => runBeforeLogoutCleanups());
         } else {
             view.unmount();
         }
+        expect(signal?.aborted).toBe(true);
         await act(async () => resolveSession(null));
         act(() => vi.advanceTimersByTime(10_000));
 
