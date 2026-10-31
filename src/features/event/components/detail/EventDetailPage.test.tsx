@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { fetchAuthSession } from "@/features/auth/api/auth-client";
+import { ApiError, redirectToLogin } from "@/lib/api-client";
 import { runBeforeLogoutCleanups } from "@/features/auth/lib/logout-lifecycle";
 import { fetchEventDetail } from "@/features/event/api/event-client";
 import { connectColorSocket } from "@/features/event/lib/color-websocket";
@@ -31,6 +33,15 @@ const {
     scriptPropsBySrc: new Map<string, unknown>(),
     socketLibrariesAvailable: { value: true },
     toastError: vi.fn(),
+}));
+
+vi.mock("@/features/auth/api/auth-client", () => ({
+    fetchAuthSession: vi.fn(),
+}));
+
+vi.mock("@/lib/api-client", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/lib/api-client")>()),
+    redirectToLogin: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -98,6 +109,8 @@ describe("EventDetailPage", () => {
         scriptPropsBySrc.clear();
         socketLibrariesAvailable.value = true;
         toastError.mockReset();
+        vi.mocked(fetchAuthSession).mockReset();
+        vi.mocked(fetchAuthSession).mockResolvedValue({ user: { id: "host-id" } });
         vi.mocked(fetchEventDetail).mockResolvedValue({
             colors: ["#112233", "#445566"],
             currentColor: "#112233",
@@ -165,11 +178,11 @@ describe("EventDetailPage", () => {
             });
         const view = await renderLoadedPage();
 
-        act(() => {
+        await act(async () => {
             callbacks[0].onConnected();
             callbacks[0].onError("temporary error");
-            vi.advanceTimersByTime(1000);
         });
+        act(() => vi.advanceTimersByTime(1000));
 
         expect(connectColorSocket).toHaveBeenCalledTimes(2);
         expect(disconnects[0]).toHaveBeenCalledOnce();
@@ -209,9 +222,11 @@ describe("EventDetailPage", () => {
             );
         const view = await renderLoadedPage();
 
-        act(() => {
+        await act(async () => {
             callbacks[0].onConnected();
             callbacks[0].onError("temporary error");
+        });
+        act(() => {
             vi.advanceTimersByTime(1000);
             callbacks[1].onConnected();
             callbacks[1].onColorChanged("#445566");
@@ -316,13 +331,13 @@ describe("EventDetailPage", () => {
     it("shows the final socket error after reconnect attempts are exhausted", async () => {
         const view = await renderLoadedPage();
 
-        act(() => callbacks[0].onError("socket failed"));
+        await act(async () => callbacks[0].onError("socket failed"));
         act(() => vi.advanceTimersByTime(1000));
-        act(() => callbacks[1].onError("socket failed"));
+        await act(async () => callbacks[1].onError("socket failed"));
         act(() => vi.advanceTimersByTime(2000));
-        act(() => callbacks[2].onError("socket failed"));
+        await act(async () => callbacks[2].onError("socket failed"));
         act(() => vi.advanceTimersByTime(4000));
-        act(() => callbacks[3].onError("socket failed"));
+        await act(async () => callbacks[3].onError("socket failed"));
 
         expect(connectColorSocket).toHaveBeenCalledTimes(4);
         expect(toastError).toHaveBeenCalledWith("socket failed");
@@ -332,6 +347,75 @@ describe("EventDetailPage", () => {
 
         expect(connectColorSocket).toHaveBeenCalledTimes(5);
         expect(screen.queryByText("socket failed")).not.toBeInTheDocument();
+        view.unmount();
+    });
+
+    it("redirects to login only when the socket failure confirms an expired session", async () => {
+        vi.mocked(fetchAuthSession).mockResolvedValue(null);
+        const view = await renderLoadedPage();
+
+        await act(async () => callbacks[0].onError("socket failed"));
+        act(() => vi.advanceTimersByTime(10_000));
+
+        expect(fetchAuthSession).toHaveBeenCalledOnce();
+        expect(redirectToLogin).toHaveBeenCalledOnce();
+        expect(disconnects[0]).toHaveBeenCalledOnce();
+        expect(connectColorSocket).toHaveBeenCalledOnce();
+        expect(toastError).not.toHaveBeenCalled();
+        view.unmount();
+    });
+
+    it.each([
+        new TypeError("Network request failed"),
+        new ApiError("Service unavailable", 503, "Service Unavailable"),
+    ])("keeps reconnecting when session verification fails: %s", async (error) => {
+        vi.mocked(fetchAuthSession).mockRejectedValue(error);
+        const view = await renderLoadedPage();
+
+        await act(async () => callbacks[0].onError("socket failed"));
+        act(() => vi.advanceTimersByTime(1000));
+
+        expect(redirectToLogin).not.toHaveBeenCalled();
+        expect(connectColorSocket).toHaveBeenCalledTimes(2);
+        view.unmount();
+    });
+
+    it("verifies a failed connection only once despite repeated error callbacks", async () => {
+        let resolveSession: (value: null) => void = () => undefined;
+        vi.mocked(fetchAuthSession).mockReturnValue(new Promise((resolve) => {
+            resolveSession = resolve;
+        }));
+        const view = await renderLoadedPage();
+
+        act(() => {
+            callbacks[0].onError("first error");
+            callbacks[0].onError("late error");
+        });
+        expect(fetchAuthSession).toHaveBeenCalledOnce();
+
+        await act(async () => resolveSession(null));
+        expect(redirectToLogin).toHaveBeenCalledOnce();
+        view.unmount();
+    });
+
+    it.each(["logout", "unmount"])("ignores session verification after %s", async (action) => {
+        let resolveSession: (value: null) => void = () => undefined;
+        vi.mocked(fetchAuthSession).mockReturnValue(new Promise((resolve) => {
+            resolveSession = resolve;
+        }));
+        const view = await renderLoadedPage();
+
+        act(() => callbacks[0].onError("socket failed"));
+        if (action === "logout") {
+            act(() => runBeforeLogoutCleanups());
+        } else {
+            view.unmount();
+        }
+        await act(async () => resolveSession(null));
+        act(() => vi.advanceTimersByTime(10_000));
+
+        expect(redirectToLogin).not.toHaveBeenCalled();
+        expect(connectColorSocket).toHaveBeenCalledOnce();
         view.unmount();
     });
 

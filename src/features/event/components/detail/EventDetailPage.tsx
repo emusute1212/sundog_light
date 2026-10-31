@@ -1,4 +1,6 @@
 "use client";
+import { fetchAuthSession } from "@/features/auth/api/auth-client";
+import { redirectToLogin } from "@/lib/api-client";
 import { registerBeforeLogoutCleanup } from "@/features/auth/lib/logout-lifecycle";
 import { fetchEventDetail } from "@/features/event/api/event-client";
 import EventDetailSection from "@/features/event/components/detail/section/EventDetailSection";
@@ -148,7 +150,29 @@ export default function EventDetailPage() {
             disconnectCurrent();
             setIsSocketConnected(false);
             setIsColorChanging(false);
-            scheduleReconnect(message);
+            const failedGeneration = connectionGeneration;
+
+            void fetchAuthSession().then(
+                (session) => {
+                    if (!isActive || failedGeneration !== connectionGeneration) {
+                        return;
+                    }
+
+                    if (session == null) {
+                        isActive = false;
+                        clearReconnectTimer();
+                        redirectToLogin();
+                        return;
+                    }
+
+                    scheduleReconnect(message);
+                },
+                () => {
+                    if (isActive && failedGeneration === connectionGeneration) {
+                        scheduleReconnect(message);
+                    }
+                }
+            );
         };
 
         const synchronizeCurrentColor = async (generation: number) => {
