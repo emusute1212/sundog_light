@@ -5,11 +5,12 @@ type UserResponse = {
     id?: string;
 };
 
-export async function fetchAuthSession(): Promise<AuthSession | null> {
+export async function fetchAuthSession(signal?: AbortSignal): Promise<AuthSession | null> {
     try {
         const response = await apiRequest<UserResponse>({
             path: "/api/session/me",
             requiresAuth: false,
+            signal,
         });
 
         if (!response.id) {
